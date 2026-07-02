@@ -9,11 +9,12 @@ import moment from "moment";
 function estimateSupplies(trip) {
   const days = moment(trip.end_date).diff(moment(trip.start_date), "days") + 1;
   const exchanges = days * (trip.exchanges_per_day || 1);
-  const spare = Math.ceil(exchanges * 0.2);
+  const bags = days * (trip.bags_per_day || 2);
+  const spare = Math.ceil(bags * 0.2);
   const isApd = trip.modality === "apd";
 
   return [
-    { name: "PD Solution bags", qty: exchanges + spare, hint: `${exchanges} + 20% spare` },
+    { name: "PD Solution bags", qty: bags + spare, hint: `${bags} bags + 20% spare` },
     { name: isApd ? "Cycler tubing sets" : "Transfer sets / tubing", qty: Math.ceil(days / 30) + 2, hint: "Replace monthly + spares" },
     { name: "Drain bags", qty: isApd ? days + 2 : exchanges + spare, hint: isApd ? "1/day + spares" : "1 per exchange" },
     { name: "Mini caps + betadine", qty: exchanges + spare, hint: "1 per exchange" },

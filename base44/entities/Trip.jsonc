@@ -25,6 +25,11 @@
       "type": "number",
       "description": "Number of exchanges per day during the trip"
     },
+    "bags_per_day": {
+      "type": "number",
+      "description": "Number of dialysate bags used per day (for supply estimation)",
+      "default": 2
+    },
     "notes": {
       "type": "string"
     }

@@ -11,6 +11,7 @@ export default function TripForm({ onSubmit, onCancel, initial }) {
     end_date: initial?.end_date || "",
     modality: initial?.modality || "capd",
     exchanges_per_day: initial?.exchanges_per_day ?? 4,
+    bags_per_day: initial?.bags_per_day ?? 2,
     notes: initial?.notes || "",
   });
   const [saving, setSaving] = useState(false);
@@ -24,6 +25,7 @@ export default function TripForm({ onSubmit, onCancel, initial }) {
       end_date: form.end_date,
       modality: form.modality,
       exchanges_per_day: Number(form.exchanges_per_day) || 1,
+      bags_per_day: Number(form.bags_per_day) || 2,
       notes: form.notes.trim() || undefined,
     });
     setSaving(false);
@@ -56,9 +58,13 @@ export default function TripForm({ onSubmit, onCancel, initial }) {
           </select>
         </div>
         <div>
-          <Label className="text-xs">Exchanges per day</Label>
+          <Label className="text-xs">Exchanges / day</Label>
           <Input type="number" min="1" value={form.exchanges_per_day} onChange={e => setForm({ ...form, exchanges_per_day: e.target.value })} className="mt-1" />
         </div>
+      </div>
+      <div>
+        <Label className="text-xs">Dialysate bags per day</Label>
+        <Input type="number" min="1" value={form.bags_per_day} onChange={e => setForm({ ...form, bags_per_day: e.target.value })} className="mt-1" />
       </div>
       <div>
         <Label className="text-xs">Notes</Label>
