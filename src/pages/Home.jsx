@@ -203,38 +203,51 @@ export default function Home() {
         </section>
       )}
 
-      {/* Medications */}
+      {/* Medication reminders */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-heading text-lg font-semibold">Medications</h2>
+          <h2 className="font-heading text-lg font-semibold">Medication Reminders</h2>
           <Link to="/medications" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">Manage <ArrowRight size={14} /></Link>
         </div>
-        {meds.length === 0 ? (
-          <div className="bg-card rounded-2xl border p-6 text-center">
-            <Pill size={28} className="text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No medications added yet</p>
-            <Link to="/medications" className="text-sm text-primary font-medium hover:underline mt-1 inline-block">Add medication</Link>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {meds.map(med => {
-              const taken = isMedTaken(med.id);
-              return (
-                <div key={med.id} className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${taken ? "bg-emerald-50/50 border-emerald-200/50" : "bg-card"}`}>
-                  <button onClick={() => !taken && handleQuickMedLog(med)} disabled={taken}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${taken ? "bg-emerald-500 text-white" : "bg-secondary hover:bg-primary hover:text-primary-foreground"}`}>
-                    {taken ? <Check size={18} /> : <Clock size={18} />}
+        {(() => {
+          const pending = meds.filter(med => !isMedTaken(med.id));
+          if (meds.length === 0) {
+            return (
+              <div className="bg-card rounded-2xl border p-6 text-center">
+                <Pill size={28} className="text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No medications added yet</p>
+                <Link to="/medications" className="text-sm text-primary font-medium hover:underline mt-1 inline-block">Add medication</Link>
+              </div>
+            );
+          }
+          if (pending.length === 0) {
+            return (
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200/50">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                  <Check size={18} />
+                </div>
+                <p className="text-sm font-medium text-emerald-700">All medications taken for today</p>
+              </div>
+            );
+          }
+          return (
+            <div className="space-y-2">
+              {pending.map(med => (
+                <div key={med.id} className="flex items-center gap-3 p-3.5 rounded-2xl border bg-card transition-all">
+                  <button onClick={() => handleQuickMedLog(med)}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all bg-secondary hover:bg-primary hover:text-primary-foreground">
+                    <Clock size={18} />
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${taken ? "line-through text-muted-foreground" : ""}`}>{med.name}</p>
+                    <p className="text-sm font-medium">{med.name}</p>
                     <p className="text-xs text-muted-foreground">{med.dosage}{med.frequency ? ` · ${med.frequency}` : ""}</p>
                   </div>
-                  {taken && <span className="text-xs text-emerald-600 font-medium">Taken</span>}
+                  <span className="text-xs text-primary font-medium">Due</span>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
       </section>
 
       {/* Recent symptoms */}
