@@ -1,0 +1,32 @@
+{
+  "name": "Exercise",
+  "type": "object",
+  "properties": {
+    "activity": {
+      "type": "string"
+    },
+    "duration_minutes": {
+      "type": "number"
+    },
+    "intensity": {
+      "type": "string",
+      "enum": [
+        "light",
+        "moderate",
+        "vigorous"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "logged_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "activity",
+    "duration_minutes",
+    "logged_at"
+  ]
+}

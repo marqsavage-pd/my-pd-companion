@@ -1,0 +1,49 @@
+{
+  "name": "Symptom",
+  "type": "object",
+  "properties": {
+    "symptom_type": {
+      "type": "string",
+      "enum": [
+        "tremor",
+        "stiffness",
+        "slowness",
+        "balance",
+        "freezing",
+        "fatigue",
+        "pain",
+        "sleep_issues",
+        "anxiety",
+        "depression",
+        "brain_fog",
+        "other"
+      ]
+    },
+    "severity": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "notes": {
+      "type": "string"
+    },
+    "logged_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "body_side": {
+      "type": "string",
+      "enum": [
+        "left",
+        "right",
+        "both",
+        "not_applicable"
+      ]
+    }
+  },
+  "required": [
+    "symptom_type",
+    "severity",
+    "logged_at"
+  ]
+}
