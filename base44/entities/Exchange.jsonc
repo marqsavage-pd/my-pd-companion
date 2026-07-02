@@ -1,0 +1,60 @@
+{
+  "name": "Exchange",
+  "type": "object",
+  "properties": {
+    "modality": {
+      "type": "string",
+      "enum": [
+        "capd",
+        "apd"
+      ]
+    },
+    "dextrose_concentration": {
+      "type": "number",
+      "enum": [
+        1.5,
+        2.5,
+        4.25
+      ]
+    },
+    "fill_volume": {
+      "type": "number",
+      "description": "Volume infused in mL"
+    },
+    "drain_volume": {
+      "type": "number",
+      "description": "Volume drained in mL"
+    },
+    "ultrafiltration": {
+      "type": "number",
+      "description": "Net fluid removed in mL (drain - fill)"
+    },
+    "dwell_hours": {
+      "type": "number"
+    },
+    "solution_appearance": {
+      "type": "string",
+      "enum": [
+        "clear",
+        "cloudy",
+        "bloody",
+        "fibrin"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "logged_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "modality",
+    "dextrose_concentration",
+    "fill_volume",
+    "drain_volume",
+    "solution_appearance",
+    "logged_at"
+  ]
+}

@@ -5,17 +5,21 @@
     "symptom_type": {
       "type": "string",
       "enum": [
-        "tremor",
-        "stiffness",
-        "slowness",
-        "balance",
-        "freezing",
+        "nausea",
+        "abdominal_pain",
+        "swelling",
+        "shortness_of_breath",
         "fatigue",
-        "pain",
+        "fever",
+        "chills",
+        "constipation",
+        "exit_site_redness",
+        "exit_site_drainage",
+        "muscle_cramps",
+        "dizziness",
+        "itching",
+        "poor_appetite",
         "sleep_issues",
-        "anxiety",
-        "depression",
-        "brain_fog",
         "other"
       ]
     },
@@ -30,15 +34,6 @@
     "logged_at": {
       "type": "string",
       "format": "date-time"
-    },
-    "body_side": {
-      "type": "string",
-      "enum": [
-        "left",
-        "right",
-        "both",
-        "not_applicable"
-      ]
     }
   },
   "required": [

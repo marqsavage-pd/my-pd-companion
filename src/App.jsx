@@ -15,9 +15,10 @@ import ResetPassword from '@/pages/ResetPassword';
 
 import AppLayout from '@/components/layout/AppLayout';
 import Home from '@/pages/Home';
+import Exchanges from '@/pages/Exchanges';
+import Vitals from '@/pages/Vitals';
 import Symptoms from '@/pages/Symptoms';
 import Medications from '@/pages/Medications';
-import ExercisePage from '@/pages/ExercisePage';
 import Trends from '@/pages/Trends';
 import Journal from '@/pages/Journal';
 
@@ -50,9 +51,10 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/exchanges" element={<Exchanges />} />
+          <Route path="/vitals" element={<Vitals />} />
           <Route path="/symptoms" element={<Symptoms />} />
           <Route path="/medications" element={<Medications />} />
-          <Route path="/exercise" element={<ExercisePage />} />
           <Route path="/trends" element={<Trends />} />
           <Route path="/journal" element={<Journal />} />
         </Route>

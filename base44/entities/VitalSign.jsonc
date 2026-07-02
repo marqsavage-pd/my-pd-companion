@@ -1,0 +1,25 @@
+{
+  "name": "VitalSign",
+  "type": "object",
+  "properties": {
+    "weight_kg": {
+      "type": "number"
+    },
+    "systolic_bp": {
+      "type": "number"
+    },
+    "diastolic_bp": {
+      "type": "number"
+    },
+    "measured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "measured_at"
+  ]
+}

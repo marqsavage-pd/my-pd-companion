@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine } from "recharts";
 import moment from "moment";
 
 const symptomLabels = {
-  tremor: "Tremor", stiffness: "Stiffness", slowness: "Slowness", balance: "Balance",
-  freezing: "Freezing", fatigue: "Fatigue", pain: "Pain", sleep_issues: "Sleep",
-  anxiety: "Anxiety", depression: "Low Mood", brain_fog: "Brain Fog", other: "Other",
+  nausea: "Nausea", abdominal_pain: "Abdominal Pain", swelling: "Swelling", shortness_of_breath: "SOB",
+  fatigue: "Fatigue", fever: "Fever", chills: "Chills", constipation: "Constipation",
+  exit_site_redness: "Exit Site Red", exit_site_drainage: "Exit Site Drain", muscle_cramps: "Cramps",
+  dizziness: "Dizziness", itching: "Itching", poor_appetite: "Poor Appetite", sleep_issues: "Sleep", other: "Other",
 };
 
 export default function Trends() {
+  const [exchanges, setExchanges] = useState([]);
+  const [vitals, setVitals] = useState([]);
   const [symptoms, setSymptoms] = useState([]);
-  const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState(7);
 
@@ -20,58 +22,60 @@ export default function Trends() {
   const loadData = async () => {
     setLoading(true);
     const since = moment().subtract(range, "days").startOf("day").toISOString();
-    const [s, e] = await Promise.all([
+    const [ex, v, s] = await Promise.all([
+      base44.entities.Exchange.filter({ logged_at: { $gte: since } }, "logged_at", 500),
+      base44.entities.VitalSign.filter({ measured_at: { $gte: since } }, "measured_at", 500),
       base44.entities.Symptom.filter({ logged_at: { $gte: since } }, "logged_at", 500),
-      base44.entities.Exercise.filter({ logged_at: { $gte: since } }, "logged_at", 500),
     ]);
+    setExchanges(ex);
+    setVitals(v);
     setSymptoms(s);
-    setExercises(e);
     setLoading(false);
   };
 
-  // Symptom severity by day
-  const symptomByDay = () => {
+  const buildDays = () => {
     const days = {};
     for (let i = range - 1; i >= 0; i--) {
       const day = moment().subtract(i, "days").format("YYYY-MM-DD");
-      days[day] = { date: moment(day).format("MMM D"), avg: 0, count: 0, total: 0 };
+      days[day] = { date: moment(day).format("MMM D"), uf: 0, weight: null, sys: null, dia: null };
     }
-    symptoms.forEach(s => {
-      const day = moment(s.logged_at).format("YYYY-MM-DD");
-      if (days[day]) {
-        days[day].total += s.severity;
-        days[day].count += 1;
+    return days;
+  };
+
+  const ufByDay = () => {
+    const days = buildDays();
+    exchanges.forEach(e => {
+      const day = moment(e.logged_at).format("YYYY-MM-DD");
+      if (days[day]) days[day].uf += e.ultrafiltration || 0;
+    });
+    return Object.values(days);
+  };
+
+  const weightByDay = () => {
+    const days = buildDays();
+    vitals.forEach(v => {
+      const day = moment(v.measured_at).format("YYYY-MM-DD");
+      if (days[day] && v.weight_kg) days[day].weight = v.weight_kg;
+    });
+    return Object.values(days);
+  };
+
+  const bpByDay = () => {
+    const days = buildDays();
+    vitals.forEach(v => {
+      const day = moment(v.measured_at).format("YYYY-MM-DD");
+      if (days[day] && v.systolic_bp) {
+        days[day].sys = v.systolic_bp;
+        days[day].dia = v.diastolic_bp;
       }
     });
-    Object.values(days).forEach(d => {
-      d.avg = d.count > 0 ? Math.round((d.total / d.count) * 10) / 10 : 0;
-    });
     return Object.values(days);
   };
 
-  // Exercise minutes by day
-  const exerciseByDay = () => {
-    const days = {};
-    for (let i = range - 1; i >= 0; i--) {
-      const day = moment().subtract(i, "days").format("YYYY-MM-DD");
-      days[day] = { date: moment(day).format("MMM D"), minutes: 0 };
-    }
-    exercises.forEach(e => {
-      const day = moment(e.logged_at).format("YYYY-MM-DD");
-      if (days[day]) days[day].minutes += e.duration_minutes || 0;
-    });
-    return Object.values(days);
-  };
-
-  // Most frequent symptoms
   const topSymptoms = () => {
     const counts = {};
-    symptoms.forEach(s => {
-      counts[s.symptom_type] = (counts[s.symptom_type] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+    symptoms.forEach(s => { counts[s.symptom_type] = (counts[s.symptom_type] || 0) + 1; });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5)
       .map(([type, count]) => ({ type, label: symptomLabels[type] || type, count }));
   };
 
@@ -80,63 +84,70 @@ export default function Trends() {
   }
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
+    <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold">Trends</h1>
-        <p className="text-sm text-muted-foreground mt-1">See patterns in your data</p>
+        <p className="text-sm text-muted-foreground mt-1">Monitor your fluid balance & vitals</p>
       </div>
 
-      {/* Range selector */}
       <div className="flex gap-2">
         {[7, 14, 30].map(r => (
-          <button
-            key={r}
-            onClick={() => setRange(r)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-              range === r ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground"
-            }`}
-          >
+          <button key={r} onClick={() => setRange(r)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${range === r ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground"}`}>
             {r} days
           </button>
         ))}
       </div>
 
-      {/* Symptom severity chart */}
+      {/* UF chart */}
       <section className="bg-card rounded-2xl border p-5">
-        <h3 className="font-heading text-base font-semibold mb-4">Average Symptom Severity</h3>
-        {symptoms.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">No symptom data for this period</p>
+        <h3 className="font-heading text-base font-semibold mb-4">Daily Ultrafiltration</h3>
+        {exchanges.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">No exchange data for this period</p>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={symptomByDay()}>
-              <defs>
-                <linearGradient id="severityGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(200, 60%, 42%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(200, 60%, 42%)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
+            <BarChart data={ufByDay()}>
               <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis domain={[0, 5]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13 }} />
-              <Area type="monotone" dataKey="avg" name="Avg Severity" stroke="hsl(200, 60%, 42%)" fill="url(#severityGrad)" strokeWidth={2} />
-            </AreaChart>
+              <ReferenceLine y={0} stroke="hsl(var(--border))" />
+              <Bar dataKey="uf" name="UF (mL)" fill="hsl(200, 60%, 42%)" radius={[6, 6, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         )}
       </section>
 
-      {/* Exercise chart */}
+      {/* Weight chart */}
       <section className="bg-card rounded-2xl border p-5">
-        <h3 className="font-heading text-base font-semibold mb-4">Exercise Minutes</h3>
-        {exercises.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">No exercise data for this period</p>
+        <h3 className="font-heading text-base font-semibold mb-4">Weight Trend</h3>
+        {vitals.filter(v => v.weight_kg).length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">No weight data for this period</p>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={exerciseByDay()}>
+            <LineChart data={weightByDay()}>
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13 }} />
+              <Line type="monotone" dataKey="weight" name="Weight (kg)" stroke="hsl(160, 40%, 45%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </section>
+
+      {/* BP chart */}
+      <section className="bg-card rounded-2xl border p-5">
+        <h3 className="font-heading text-base font-semibold mb-4">Blood Pressure Trend</h3>
+        {vitals.filter(v => v.systolic_bp).length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">No BP data for this period</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={bpByDay()}>
               <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13 }} />
-              <Bar dataKey="minutes" name="Minutes" fill="hsl(160, 40%, 45%)" radius={[6, 6, 0, 0]} />
-            </BarChart>
+              <Line type="monotone" dataKey="sys" name="Systolic" stroke="hsl(350, 60%, 55%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+              <Line type="monotone" dataKey="dia" name="Diastolic" stroke="hsl(200, 60%, 42%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+            </LineChart>
           </ResponsiveContainer>
         )}
       </section>
@@ -145,7 +156,7 @@ export default function Trends() {
       <section className="bg-card rounded-2xl border p-5">
         <h3 className="font-heading text-base font-semibold mb-4">Most Frequent Symptoms</h3>
         {topSymptoms().length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">No data yet</p>
+          <p className="text-sm text-muted-foreground text-center py-4">No symptom data yet</p>
         ) : (
           <div className="space-y-3">
             {topSymptoms().map((s, i) => {
@@ -155,7 +166,7 @@ export default function Trends() {
                   <span className="text-xs font-semibold text-muted-foreground w-4">{i + 1}</span>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium capitalize">{s.label}</span>
+                      <span className="text-sm font-medium">{s.label}</span>
                       <span className="text-xs text-muted-foreground">{s.count}×</span>
                     </div>
                     <div className="h-2 bg-secondary rounded-full overflow-hidden">

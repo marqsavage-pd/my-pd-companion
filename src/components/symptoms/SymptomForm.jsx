@@ -1,35 +1,30 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const symptomTypes = [
-  { value: "tremor", label: "Tremor" },
-  { value: "stiffness", label: "Stiffness / Rigidity" },
-  { value: "slowness", label: "Slowness of Movement" },
-  { value: "balance", label: "Balance Issues" },
-  { value: "freezing", label: "Freezing" },
+  { value: "nausea", label: "Nausea" },
+  { value: "abdominal_pain", label: "Abdominal Pain" },
+  { value: "swelling", label: "Swelling / Edema" },
+  { value: "shortness_of_breath", label: "Shortness of Breath" },
   { value: "fatigue", label: "Fatigue" },
-  { value: "pain", label: "Pain / Discomfort" },
+  { value: "fever", label: "Fever" },
+  { value: "chills", label: "Chills" },
+  { value: "constipation", label: "Constipation" },
+  { value: "exit_site_redness", label: "Exit Site Redness" },
+  { value: "exit_site_drainage", label: "Exit Site Drainage" },
+  { value: "muscle_cramps", label: "Muscle Cramps" },
+  { value: "dizziness", label: "Dizziness" },
+  { value: "itching", label: "Itching" },
+  { value: "poor_appetite", label: "Poor Appetite" },
   { value: "sleep_issues", label: "Sleep Issues" },
-  { value: "anxiety", label: "Anxiety" },
-  { value: "depression", label: "Low Mood" },
-  { value: "brain_fog", label: "Brain Fog" },
   { value: "other", label: "Other" },
-];
-
-const bodySides = [
-  { value: "left", label: "Left Side" },
-  { value: "right", label: "Right Side" },
-  { value: "both", label: "Both Sides" },
-  { value: "not_applicable", label: "N/A" },
 ];
 
 export default function SymptomForm({ onSubmit, onCancel }) {
   const [form, setForm] = useState({
     symptom_type: "",
     severity: 3,
-    body_side: "not_applicable",
     notes: "",
   });
   const [saving, setSaving] = useState(false);
@@ -49,14 +44,20 @@ export default function SymptomForm({ onSubmit, onCancel }) {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
         <label className="block text-sm font-medium mb-2">What are you experiencing?</label>
-        <Select value={form.symptom_type} onValueChange={v => setForm({ ...form, symptom_type: v })}>
-          <SelectTrigger><SelectValue placeholder="Select symptom type" /></SelectTrigger>
-          <SelectContent>
-            {symptomTypes.map(s => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto p-1">
+          {symptomTypes.map(s => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => setForm({ ...form, symptom_type: s.value })}
+              className={`py-2.5 px-3 rounded-xl text-xs font-medium transition-all ${
+                form.symptom_type === s.value ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
@@ -68,32 +69,10 @@ export default function SymptomForm({ onSubmit, onCancel }) {
               type="button"
               onClick={() => setForm({ ...form, severity: n })}
               className={`flex-1 h-12 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                form.severity === n
-                  ? `${severityColors[n]} text-white shadow-md scale-105`
-                  : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                form.severity === n ? `${severityColors[n]} text-white shadow-md scale-105` : "bg-secondary text-muted-foreground hover:bg-secondary/80"
               }`}
             >
               {n}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-2">Which side?</label>
-        <div className="flex gap-2">
-          {bodySides.map(s => (
-            <button
-              key={s.value}
-              type="button"
-              onClick={() => setForm({ ...form, body_side: s.value })}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                form.body_side === s.value
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-              }`}
-            >
-              {s.label}
             </button>
           ))}
         </div>

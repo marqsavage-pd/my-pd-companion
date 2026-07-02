@@ -1,67 +1,74 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Activity, Pill, Dumbbell, BookOpen, Plus, Check, Clock, ArrowRight } from "lucide-react";
+import { Droplets, HeartPulse, Activity, Pill, BookOpen, Plus, Check, Clock, ArrowRight, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import SymptomForm from "@/components/symptoms/SymptomForm";
+import ExchangeForm from "@/components/exchanges/ExchangeForm";
+import VitalForm from "@/components/vitals/VitalForm";
 import moment from "moment";
 
-const moodEmojis = { great: "😊", good: "🙂", okay: "😐", rough: "😟", difficult: "😣" };
-
 export default function Home() {
-  const [symptoms, setSymptoms] = useState([]);
+  const [exchanges, setExchanges] = useState([]);
+  const [vitals, setVitals] = useState([]);
   const [meds, setMeds] = useState([]);
   const [medLogs, setMedLogs] = useState([]);
-  const [exercises, setExercises] = useState([]);
+  const [symptoms, setSymptoms] = useState([]);
   const [journal, setJournal] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showSymptomForm, setShowSymptomForm] = useState(false);
+  const [showExchangeForm, setShowExchangeForm] = useState(false);
+  const [showVitalForm, setShowVitalForm] = useState(false);
   const [user, setUser] = useState(null);
 
   const todayStart = moment().startOf("day").toISOString();
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const [u, s, m, ml, e, j] = await Promise.all([
+    const [u, ex, v, m, ml, s, j] = await Promise.all([
       base44.auth.me(),
-      base44.entities.Symptom.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
+      base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
+      base44.entities.VitalSign.list("-measured_at", 5),
       base44.entities.Medication.filter({ active: true }),
       base44.entities.MedicationLog.filter({ taken_at: { $gte: todayStart } }, "-taken_at", 50),
-      base44.entities.Exercise.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 10),
+      base44.entities.Symptom.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 10),
       base44.entities.JournalEntry.filter({ created_date: { $gte: todayStart } }, "-created_date", 5),
     ]);
     setUser(u);
-    setSymptoms(s);
+    setExchanges(ex);
+    setVitals(v);
     setMeds(m);
     setMedLogs(ml);
-    setExercises(e);
+    setSymptoms(s);
     setJournal(j);
     setLoading(false);
   };
 
-  const handleLogSymptom = async (data) => {
-    await base44.entities.Symptom.create(data);
-    setShowSymptomForm(false);
+  const handleLogExchange = async (data) => {
+    await base44.entities.Exchange.create(data);
+    setShowExchangeForm(false);
+    loadData();
+  };
+
+  const handleLogVitals = async (data) => {
+    await base44.entities.VitalSign.create(data);
+    setShowVitalForm(false);
     loadData();
   };
 
   const handleQuickMedLog = async (med) => {
     await base44.entities.MedicationLog.create({
-      medication_id: med.id,
-      medication_name: med.name,
-      taken_at: new Date().toISOString(),
-      status: "taken",
+      medication_id: med.id, medication_name: med.name,
+      taken_at: new Date().toISOString(), status: "taken",
     });
     loadData();
   };
 
   const isMedTaken = (medId) => medLogs.some(l => l.medication_id === medId);
-  const totalExerciseMin = exercises.reduce((acc, e) => acc + (e.duration_minutes || 0), 0);
+  const totalUF = exchanges.reduce((acc, e) => acc + (e.ultrafiltration || 0), 0);
+  const latestVital = vitals[0];
+  const hasCloudy = exchanges.some(e => e.solution_appearance === "cloudy");
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -71,16 +78,11 @@ export default function Home() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-secondary border-t-primary rounded-full animate-spin" />
-      </div>
-    );
+    return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-secondary border-t-primary rounded-full animate-spin" /></div>;
   }
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
-      {/* Greeting */}
+    <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl md:text-3xl font-bold">
           {greeting()}{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
@@ -88,41 +90,84 @@ export default function Home() {
         <p className="text-muted-foreground mt-1">{moment().format("dddd, MMMM D")}</p>
       </div>
 
+      {hasCloudy && (
+        <div className="flex items-start gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/30">
+          <AlertTriangle size={20} className="text-destructive shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-destructive">Cloudy effluent detected</p>
+            <p className="text-xs text-destructive/80">This may indicate peritonitis. Please contact your dialysis clinic promptly.</p>
+          </div>
+        </div>
+      )}
+
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => setShowSymptomForm(true)}
-          className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/50 hover:shadow-md transition-all group"
-        >
+        <button onClick={() => setShowExchangeForm(true)}
+          className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/50 hover:shadow-md transition-all">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
             <Plus size={20} className="text-blue-600" />
           </div>
           <div className="text-left">
-            <p className="text-sm font-semibold text-blue-900">Log Symptom</p>
-            <p className="text-xs text-blue-600/70">{symptoms.length} today</p>
+            <p className="text-sm font-semibold text-blue-900">Log Exchange</p>
+            <p className="text-xs text-blue-600/70">{exchanges.length} today</p>
           </div>
         </button>
-        <Link
-          to="/exercise"
-          className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/50 hover:shadow-md transition-all"
-        >
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-            <Dumbbell size={20} className="text-emerald-600" />
+        <button onClick={() => setShowVitalForm(true)}
+          className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-rose-50 to-rose-100/50 border border-rose-200/50 hover:shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
+            <HeartPulse size={20} className="text-rose-600" />
           </div>
           <div className="text-left">
-            <p className="text-sm font-semibold text-emerald-900">Exercise</p>
-            <p className="text-xs text-emerald-600/70">{totalExerciseMin} min today</p>
+            <p className="text-sm font-semibold text-rose-900">Record Vitals</p>
+            <p className="text-xs text-rose-600/70">Weight & BP</p>
           </div>
-        </Link>
+        </button>
       </div>
 
-      {/* Medications due */}
+      {/* Today's fluid summary */}
+      <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-primary uppercase tracking-wider">Today's Fluid Removed</p>
+            <p className="text-3xl font-bold text-primary mt-1">{totalUF > 0 ? "+" : ""}{totalUF} <span className="text-lg font-medium">mL</span></p>
+          </div>
+          <Droplets size={32} className="text-primary/30" />
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">From {exchanges.length} exchange{exchanges.length !== 1 ? "s" : ""}</p>
+      </div>
+
+      {/* Latest vitals */}
+      {latestVital && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-heading text-lg font-semibold">Latest Vitals</h2>
+            <Link to="/vitals" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">View all <ArrowRight size={14} /></Link>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-card rounded-2xl border p-3 text-center">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Weight</p>
+              <p className="text-lg font-bold mt-1">{latestVital.weight_kg ? `${latestVital.weight_kg}` : "—"}</p>
+              <p className="text-[10px] text-muted-foreground">kg</p>
+            </div>
+            <div className="bg-card rounded-2xl border p-3 text-center">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BP</p>
+              <p className="text-lg font-bold mt-1">{latestVital.systolic_bp ? `${latestVital.systolic_bp}/${latestVital.diastolic_bp}` : "—"}</p>
+              <p className="text-[10px] text-muted-foreground">mmHg</p>
+            </div>
+            <div className="bg-card rounded-2xl border p-3 text-center">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Logged</p>
+              <p className="text-lg font-bold mt-1">{moment(latestVital.measured_at).format("h A")}</p>
+              <p className="text-[10px] text-muted-foreground">{moment(latestVital.measured_at).format("MMM D")}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Medications */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-heading text-lg font-semibold">Medications</h2>
-          <Link to="/medications" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
-            Manage <ArrowRight size={14} />
-          </Link>
+          <Link to="/medications" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">Manage <ArrowRight size={14} /></Link>
         </div>
         {meds.length === 0 ? (
           <div className="bg-card rounded-2xl border p-6 text-center">
@@ -136,13 +181,8 @@ export default function Home() {
               const taken = isMedTaken(med.id);
               return (
                 <div key={med.id} className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${taken ? "bg-emerald-50/50 border-emerald-200/50" : "bg-card"}`}>
-                  <button
-                    onClick={() => !taken && handleQuickMedLog(med)}
-                    disabled={taken}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                      taken ? "bg-emerald-500 text-white" : "bg-secondary hover:bg-primary hover:text-primary-foreground"
-                    }`}
-                  >
+                  <button onClick={() => !taken && handleQuickMedLog(med)} disabled={taken}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${taken ? "bg-emerald-500 text-white" : "bg-secondary hover:bg-primary hover:text-primary-foreground"}`}>
                     {taken ? <Check size={18} /> : <Clock size={18} />}
                   </button>
                   <div className="flex-1 min-w-0">
@@ -162,19 +202,15 @@ export default function Home() {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-heading text-lg font-semibold">Today's Symptoms</h2>
-            <Link to="/symptoms" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
-              View all <ArrowRight size={14} />
-            </Link>
+            <Link to="/symptoms" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">View all <ArrowRight size={14} /></Link>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {symptoms.slice(0, 6).map(s => {
               const severityColors = ["", "bg-emerald-100 text-emerald-700", "bg-lime-100 text-lime-700", "bg-amber-100 text-amber-700", "bg-orange-100 text-orange-700", "bg-red-100 text-red-700"];
               return (
                 <div key={s.id} className="shrink-0 p-3 rounded-2xl bg-card border min-w-[120px]">
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mb-1.5 ${severityColors[s.severity]}`}>
-                    {s.severity}/5
-                  </span>
-                  <p className="text-sm font-medium capitalize">{s.symptom_type.replace("_", " ")}</p>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mb-1.5 ${severityColors[s.severity]}`}>{s.severity}/5</span>
+                  <p className="text-sm font-medium capitalize">{s.symptom_type.replace(/_/g, " ")}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">{moment(s.logged_at).format("h:mm A")}</p>
                 </div>
               );
@@ -183,33 +219,31 @@ export default function Home() {
         </section>
       )}
 
-      {/* Recent journal */}
       {journal.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-heading text-lg font-semibold">Journal</h2>
-            <Link to="/journal" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
-              Write <ArrowRight size={14} />
-            </Link>
+            <Link to="/journal" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">Write <ArrowRight size={14} /></Link>
           </div>
           <div className="bg-card rounded-2xl border p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">{moodEmojis[journal[0].mood]}</span>
-              <p className="text-sm font-medium capitalize">{journal[0].mood}</p>
-              <span className="text-xs text-muted-foreground ml-auto">{moment(journal[0].created_date).format("h:mm A")}</span>
-            </div>
+            {journal[0].title && <p className="text-sm font-semibold mb-1">{journal[0].title}</p>}
             <p className="text-sm text-muted-foreground line-clamp-2">{journal[0].content}</p>
+            <p className="text-xs text-muted-foreground mt-2">{moment(journal[0].created_date).format("h:mm A")}</p>
           </div>
         </section>
       )}
 
-      {/* Symptom form dialog */}
-      <Dialog open={showSymptomForm} onOpenChange={setShowSymptomForm}>
+      <Dialog open={showExchangeForm} onOpenChange={setShowExchangeForm}>
+        <DialogContent className="rounded-2xl max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-heading text-xl">Log Exchange</DialogTitle></DialogHeader>
+          <ExchangeForm onSubmit={handleLogExchange} onCancel={() => setShowExchangeForm(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showVitalForm} onOpenChange={setShowVitalForm}>
         <DialogContent className="rounded-2xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-heading text-xl">Log a Symptom</DialogTitle>
-          </DialogHeader>
-          <SymptomForm onSubmit={handleLogSymptom} onCancel={() => setShowSymptomForm(false)} />
+          <DialogHeader><DialogTitle className="font-heading text-xl">Record Vitals</DialogTitle></DialogHeader>
+          <VitalForm onSubmit={handleLogVitals} onCancel={() => setShowVitalForm(false)} />
         </DialogContent>
       </Dialog>
     </div>
