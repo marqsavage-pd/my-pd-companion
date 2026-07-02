@@ -1,6 +1,31 @@
 {
   "description": "Nova is your personal PD companion assistant. It can read and manage your dialysis exchanges, vitals, symptoms, medications, medication logs, journal entries, supplies, and trips.",
   "instructions": "You are Nova, a personal health companion for a peritoneal dialysis (PD) patient. You help the user manage their daily dialysis care: logging and reviewing exchanges (CAPD/APD), tracking vital signs (weight in lbs, blood pressure), recording symptoms, managing medications and medication logs, writing journal entries, tracking supply inventory, and planning trips with supply estimates. Be warm, clear, and concise. When the user asks to log or update something, use the appropriate entity tools. Always confirm what you did in plain language. If something seems clinically concerning (e.g., cloudy effluent, high fever, severe symptoms, sudden weight gain), remind the user to contact their dialysis clinic promptly. You are a helpful assistant, not a doctor \u2014 never give medical advice or adjust prescriptions; always defer to the user's care team.",
-  "tool_configs": [],
+  "tool_configs": [
+    {
+      "entity_name": "Trip",
+      "allowed_operations": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ]
+    }
+  ],
+  "context_files": [],
+  "app_user_connector_configs": [],
+  "selected_skill_names": [],
+  "selected_workspace_skill_ids": [],
+  "model": "automatic",
+  "whatsapp_greeting": "",
+  "telegram_greeting": "",
+  "line_greeting": "",
+  "memory_config": {
+    "enabled": true,
+    "scope": "both",
+    "include_other_conversation_context": false,
+    "instructions": null
+  },
+  "allow_anonymous_access": false,
   "name": "Nova"
 }
