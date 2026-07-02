@@ -37,7 +37,7 @@ export default function Vitals() {
 
   const latest = vitals[0];
   const prev = vitals[1];
-  const weightDelta = latest?.weight_kg && prev?.weight_kg ? (latest.weight_kg - prev.weight_kg) : 0;
+  const weightDelta = latest?.weight_lbs && prev?.weight_lbs ? (latest.weight_lbs - prev.weight_lbs) : 0;
 
   return (
     <div className="space-y-6">
@@ -58,12 +58,12 @@ export default function Vitals() {
               <Scale size={16} className="text-primary" />
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Latest Weight</p>
             </div>
-            {latest.weight_kg ? (
+            {latest.weight_lbs ? (
               <>
-                <p className="text-2xl font-bold">{latest.weight_kg} <span className="text-sm font-medium text-muted-foreground">kg</span></p>
+                <p className="text-2xl font-bold">{latest.weight_lbs} <span className="text-sm font-medium text-muted-foreground">lbs</span></p>
                 {weightDelta !== 0 && (
                   <p className={`text-xs font-medium mt-1 ${weightDelta > 0 ? "text-amber-600" : "text-emerald-600"}`}>
-                    {weightDelta > 0 ? "▲" : "▼"} {Math.abs(weightDelta).toFixed(1)} kg from last
+                    {weightDelta > 0 ? "▲" : "▼"} {Math.abs(weightDelta).toFixed(1)} lbs from last
                   </p>
                 )}
               </>
@@ -99,7 +99,7 @@ export default function Vitals() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
-                  {v.weight_kg && <span className="text-sm font-semibold">{v.weight_kg} kg</span>}
+                  {v.weight_lbs && <span className="text-sm font-semibold">{v.weight_lbs} lbs</span>}
                   {v.systolic_bp && <span className="text-sm font-semibold">{v.systolic_bp}/{v.diastolic_bp} mmHg</span>}
                 </div>
                 {v.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{v.notes}</p>}

@@ -55,7 +55,7 @@ export default function Trends() {
     const days = buildDays();
     vitals.forEach(v => {
       const day = moment(v.measured_at).format("YYYY-MM-DD");
-      if (days[day] && v.weight_kg) days[day].weight = v.weight_kg;
+      if (days[day] && v.weight_lbs) days[day].weight = v.weight_lbs;
     });
     return Object.values(days);
   };
@@ -120,7 +120,7 @@ export default function Trends() {
       {/* Weight chart */}
       <section className="bg-card rounded-2xl border p-5">
         <h3 className="font-heading text-base font-semibold mb-4">Weight Trend</h3>
-        {vitals.filter(v => v.weight_kg).length === 0 ? (
+        {vitals.filter(v => v.weight_lbs).length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">No weight data for this period</p>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
@@ -128,7 +128,7 @@ export default function Trends() {
               <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis domain={["auto", "auto"]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13 }} />
-              <Line type="monotone" dataKey="weight" name="Weight (kg)" stroke="hsl(160, 40%, 45%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+              <Line type="monotone" dataKey="weight" name="Weight (lbs)" stroke="hsl(160, 40%, 45%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
             </LineChart>
           </ResponsiveContainer>
         )}

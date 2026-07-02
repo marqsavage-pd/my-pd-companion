@@ -146,8 +146,8 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-card rounded-2xl border p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Weight</p>
-              <p className="text-lg font-bold mt-1">{latestVital.weight_kg ? `${latestVital.weight_kg}` : "—"}</p>
-              <p className="text-[10px] text-muted-foreground">kg</p>
+              <p className="text-lg font-bold mt-1">{latestVital.weight_lbs ? `${latestVital.weight_lbs}` : "—"}</p>
+              <p className="text-[10px] text-muted-foreground">lbs</p>
             </div>
             <div className="bg-card rounded-2xl border p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BP</p>

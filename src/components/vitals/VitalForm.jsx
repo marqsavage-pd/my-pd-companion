@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function VitalForm({ onSubmit, onCancel }) {
   const [form, setForm] = useState({
-    weight_kg: "",
+    weight_lbs: "",
     systolic_bp: "",
     diastolic_bp: "",
     notes: "",
@@ -14,10 +14,10 @@ export default function VitalForm({ onSubmit, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.weight_kg && !form.systolic_bp) return;
+    if (!form.weight_lbs && !form.systolic_bp) return;
     setSaving(true);
     await onSubmit({
-      weight_kg: form.weight_kg ? parseFloat(form.weight_kg) : null,
+      weight_lbs: form.weight_lbs ? parseFloat(form.weight_lbs) : null,
       systolic_bp: form.systolic_bp ? parseInt(form.systolic_bp) : null,
       diastolic_bp: form.diastolic_bp ? parseInt(form.diastolic_bp) : null,
       notes: form.notes,
@@ -29,13 +29,13 @@ export default function VitalForm({ onSubmit, onCancel }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-1.5">Weight (kg)</label>
+        <label className="block text-sm font-medium mb-1.5">Weight (lbs)</label>
         <Input
           type="number"
           step="0.1"
-          value={form.weight_kg}
-          onChange={e => setForm({ ...form, weight_kg: e.target.value })}
-          placeholder="e.g. 70.5"
+          value={form.weight_lbs}
+          onChange={e => setForm({ ...form, weight_lbs: e.target.value })}
+          placeholder="e.g. 155.0"
           className="rounded-xl"
         />
       </div>
@@ -71,7 +71,7 @@ export default function VitalForm({ onSubmit, onCancel }) {
       </div>
       <div className="flex gap-3 pt-2">
         {onCancel && <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-xl">Cancel</Button>}
-        <Button type="submit" disabled={saving || (!form.weight_kg && !form.systolic_bp)} className="flex-1 rounded-xl h-12 text-base">
+        <Button type="submit" disabled={saving || (!form.weight_lbs && !form.systolic_bp)} className="flex-1 rounded-xl h-12 text-base">
           {saving ? "Saving..." : "Save Vitals"}
         </Button>
       </div>
