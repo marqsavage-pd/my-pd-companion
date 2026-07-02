@@ -2,8 +2,9 @@
   "name": "VitalSign",
   "type": "object",
   "properties": {
-    "weight_kg": {
-      "type": "number"
+    "weight_lbs": {
+      "type": "number",
+      "description": "Weight in pounds"
     },
     "systolic_bp": {
       "type": "number"
