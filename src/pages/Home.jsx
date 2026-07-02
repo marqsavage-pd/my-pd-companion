@@ -10,6 +10,7 @@ import moment from "moment";
 
 export default function Home() {
   const [exchanges, setExchanges] = useState([]);
+  const [recentExchanges, setRecentExchanges] = useState([]);
   const [vitals, setVitals] = useState([]);
   const [meds, setMeds] = useState([]);
   const [medLogs, setMedLogs] = useState([]);
@@ -26,9 +27,10 @@ export default function Home() {
 
   const loadData = async () => {
     setLoading(true);
-    const [u, ex, v, m, ml, s, j] = await Promise.all([
+    const [u, ex, re, v, m, ml, s, j] = await Promise.all([
       base44.auth.me(),
       base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
+      base44.entities.Exchange.list("-logged_at", 5),
       base44.entities.VitalSign.list("-measured_at", 5),
       base44.entities.Medication.filter({ active: true }),
       base44.entities.MedicationLog.filter({ taken_at: { $gte: todayStart } }, "-taken_at", 50),
@@ -37,6 +39,7 @@ export default function Home() {
     ]);
     setUser(u);
     setExchanges(ex);
+    setRecentExchanges(re);
     setVitals(v);
     setMeds(m);
     setMedLogs(ml);
@@ -159,6 +162,43 @@ export default function Home() {
               <p className="text-lg font-bold mt-1">{moment(latestVital.measured_at).format("h A")}</p>
               <p className="text-[10px] text-muted-foreground">{moment(latestVital.measured_at).format("MMM D")}</p>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Recent sessions */}
+      {recentExchanges.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-heading text-lg font-semibold">Recent Sessions</h2>
+            <Link to="/exchanges" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">View all <ArrowRight size={14} /></Link>
+          </div>
+          <div className="space-y-2">
+            {recentExchanges.map(e => {
+              const uf = e.ultrafiltration || 0;
+              const isCloudy = e.solution_appearance === "cloudy";
+              return (
+                <div key={e.id} className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                    <Droplets size={18} className="text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold capitalize">{e.modality}</span>
+                      <span className="text-xs text-muted-foreground">{e.dextrose_concentration}% dextrose</span>
+                      {isCloudy && <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">cloudy</span>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{moment(e.logged_at).format("MMM D · h:mm A")}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`text-sm font-bold ${uf > 0 ? "text-emerald-600" : uf < 0 ? "text-amber-600" : "text-muted-foreground"}`}>
+                      {uf > 0 ? "+" : ""}{uf}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">mL UF</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
