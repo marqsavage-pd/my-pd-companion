@@ -21,6 +21,8 @@ import Symptoms from '@/pages/Symptoms';
 import Medications from '@/pages/Medications';
 import Trends from '@/pages/Trends';
 import Journal from '@/pages/Journal';
+import Inventory from '@/pages/Inventory';
+import Travel from '@/pages/Travel';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +59,8 @@ const AuthenticatedApp = () => {
           <Route path="/medications" element={<Medications />} />
           <Route path="/trends" element={<Trends />} />
           <Route path="/journal" element={<Journal />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/travel" element={<Travel />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
