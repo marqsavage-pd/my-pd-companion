@@ -23,6 +23,7 @@ import Trends from '@/pages/Trends';
 import Journal from '@/pages/Journal';
 import Inventory from '@/pages/Inventory';
 import Travel from '@/pages/Travel';
+import Nova from '@/pages/Nova';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -61,6 +62,7 @@ const AuthenticatedApp = () => {
           <Route path="/journal" element={<Journal />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/travel" element={<Travel />} />
+          <Route path="/nova" element={<Nova />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
