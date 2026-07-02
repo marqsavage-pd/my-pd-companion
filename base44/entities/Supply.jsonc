@@ -1,0 +1,80 @@
+{
+  "name": "Supply",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Item name"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Notes about the item (e.g. baseline order qty, clinic-supplied, self-purchased)"
+    },
+    "qty": {
+      "type": "number",
+      "description": "Current quantity on hand"
+    },
+    "reorder_point": {
+      "type": "number",
+      "description": "Quantity threshold that triggers a reorder"
+    },
+    "ordered": {
+      "type": "boolean",
+      "description": "Whether a reorder is currently in progress"
+    },
+    "ordered_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the reorder was placed"
+    },
+    "expected_delivery": {
+      "type": "string",
+      "format": "date",
+      "description": "Expected delivery date for the reorder"
+    },
+    "last_restocked": {
+      "type": "string",
+      "format": "date",
+      "description": "Date last restocked"
+    }
+  },
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

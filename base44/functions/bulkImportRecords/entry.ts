@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const ALLOWED_ENTITIES = ['Exchange', 'VitalSign', 'Symptom', 'JournalEntry'];
+const ALLOWED_ENTITIES = ['Exchange', 'VitalSign', 'Symptom', 'JournalEntry', 'Supply'];
 
 Deno.serve(async (req) => {
   try {
