@@ -32,6 +32,9 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_BASE44_APP_ID: 6a45d11e353b02dd4965d4c5
+          VITE_BASE44_APP_BASE_URL: https://app.base44.com
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
