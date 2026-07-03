@@ -69,7 +69,8 @@ export default function Home() {
   };
 
   const isMedTaken = (medId) => medLogs.some(l => l.medication_id === medId);
-  const totalUF = exchanges.reduce((acc, e) => acc + (e.ultrafiltration || 0), 0);
+  const lastSession = recentExchanges[0];
+  const totalUF = lastSession?.ultrafiltration || 0;
   const latestVital = vitals[0];
   const hasCloudy = exchanges.some(e => e.solution_appearance === "cloudy");
 
@@ -136,7 +137,7 @@ export default function Home() {
           </div>
           <Droplets size={32} className="text-primary/30" />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">From {exchanges.length} exchange{exchanges.length !== 1 ? "s" : ""}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment(lastSession.logged_at).format("h:mm A")}` : "No sessions logged yet"}</p>
       </div>
 
       {/* Latest vitals */}
