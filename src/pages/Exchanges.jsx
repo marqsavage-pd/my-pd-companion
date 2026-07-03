@@ -51,9 +51,8 @@ export default function Exchanges() {
     return acc;
   }, {});
 
-  const todayUF = exchanges
-    .filter(e => moment(e.logged_at).isSame(moment(), "day"))
-    .reduce((acc, e) => acc + (e.ultrafiltration || 0), 0);
+  const lastSession = exchanges[0];
+  const lastUF = lastSession?.ultrafiltration || 0;
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-secondary border-t-primary rounded-full animate-spin" /></div>;
@@ -72,8 +71,9 @@ export default function Exchanges() {
       </div>
 
       <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5">
-        <p className="text-xs font-semibold text-primary uppercase tracking-wider">Today's Total UF</p>
-        <p className="text-3xl font-bold text-primary mt-1">{todayUF > 0 ? "+" : ""}{todayUF} <span className="text-lg font-medium">mL</span></p>
+        <p className="text-xs font-semibold text-primary uppercase tracking-wider">Last Session UF</p>
+        <p className="text-3xl font-bold text-primary mt-1">{lastUF > 0 ? "+" : ""}{lastUF} <span className="text-lg font-medium">mL</span></p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment(lastSession.logged_at).format("MMM D, h:mm A")}` : "No sessions logged yet"}</p>
       </div>
 
       {exchanges.length === 0 ? (
