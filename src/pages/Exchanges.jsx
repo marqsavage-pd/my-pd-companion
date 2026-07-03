@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Droplets, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Droplets, Trash2, AlertTriangle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ExchangeForm from "@/components/exchanges/ExchangeForm";
@@ -17,6 +17,7 @@ export default function Exchanges() {
   const [exchanges, setExchanges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
 
   useEffect(() => { loadExchanges(); }, []);
 
@@ -28,8 +29,13 @@ export default function Exchanges() {
   };
 
   const handleSubmit = async (data) => {
-    await base44.entities.Exchange.create(data);
+    if (editing) {
+      await base44.entities.Exchange.update(editing.id, data);
+    } else {
+      await base44.entities.Exchange.create(data);
+    }
     setShowForm(false);
+    setEditing(null);
     loadExchanges();
   };
 
@@ -60,7 +66,7 @@ export default function Exchanges() {
           <h1 className="font-heading text-2xl font-bold">Exchanges</h1>
           <p className="text-sm text-muted-foreground mt-1">Track each dialysis exchange</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="rounded-xl gap-2">
+        <Button onClick={() => { setEditing(null); setShowForm(true); }} className="rounded-xl gap-2">
           <Plus size={16} /> Log
         </Button>
       </div>
@@ -76,7 +82,7 @@ export default function Exchanges() {
             <Droplets size={24} className="text-muted-foreground" />
           </div>
           <p className="text-muted-foreground">No exchanges logged yet</p>
-          <Button onClick={() => setShowForm(true)} className="mt-4 rounded-xl">Log your first exchange</Button>
+          <Button onClick={() => { setEditing(null); setShowForm(true); }} className="mt-4 rounded-xl">Log your first exchange</Button>
         </div>
       ) : (
         Object.entries(grouped).map(([day, items]) => {
@@ -125,9 +131,14 @@ export default function Exchanges() {
                         {e.notes && <p className="text-xs text-muted-foreground mt-1 italic">{e.notes}</p>}
                         <p className="text-[10px] text-muted-foreground mt-1">{moment(e.logged_at).format("h:mm A")}</p>
                       </div>
-                      <button onClick={() => handleDelete(e.id)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-destructive/10 transition-all">
-                        <Trash2 size={14} className="text-destructive" />
-                      </button>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                        <button onClick={() => { setEditing(e); setShowForm(true); }} className="p-1.5 rounded-lg hover:bg-secondary transition-all">
+                          <Pencil size={14} className="text-muted-foreground" />
+                        </button>
+                        <button onClick={() => handleDelete(e.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-all">
+                          <Trash2 size={14} className="text-destructive" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -137,10 +148,10 @@ export default function Exchanges() {
         })
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setEditing(null); }}>
         <DialogContent className="rounded-2xl max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-heading text-xl">Log Exchange</DialogTitle></DialogHeader>
-          <ExchangeForm onSubmit={handleSubmit} onCancel={() => setShowForm(false)} />
+          <DialogHeader><DialogTitle className="font-heading text-xl">{editing ? "Edit Exchange" : "Log Exchange"}</DialogTitle></DialogHeader>
+          <ExchangeForm initial={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} />
         </DialogContent>
       </Dialog>
     </div>

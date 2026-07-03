@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Plane, Trash2, Calendar, Droplets, Package, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Plus, Plane, Trash2, Calendar, Droplets, Package, CheckCircle2, AlertTriangle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TripForm from "@/components/travel/TripForm";
@@ -31,6 +31,7 @@ export default function Travel() {
   const [supplies, setSupplies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => { load(); }, []);
@@ -47,8 +48,13 @@ export default function Travel() {
   };
 
   const handleSubmit = async (data) => {
-    await base44.entities.Trip.create(data);
+    if (editing) {
+      await base44.entities.Trip.update(editing.id, data);
+    } else {
+      await base44.entities.Trip.create(data);
+    }
     setShowForm(false);
+    setEditing(null);
     load();
   };
 
@@ -81,7 +87,7 @@ export default function Travel() {
           <h1 className="font-heading text-2xl font-bold">Travel</h1>
           <p className="text-sm text-muted-foreground mt-1">Estimate supplies for planned trips</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="rounded-xl gap-2">
+        <Button onClick={() => { setEditing(null); setShowForm(true); }} className="rounded-xl gap-2">
           <Plus size={16} /> Trip
         </Button>
       </div>
@@ -92,7 +98,7 @@ export default function Travel() {
             <Plane size={24} className="text-muted-foreground" />
           </div>
           <p className="text-muted-foreground">No trips planned yet</p>
-          <Button onClick={() => setShowForm(true)} className="mt-4 rounded-xl">Plan your first trip</Button>
+          <Button onClick={() => { setEditing(null); setShowForm(true); }} className="mt-4 rounded-xl">Plan your first trip</Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -156,9 +162,14 @@ export default function Travel() {
                     })}
                     <div className="flex justify-between items-center pt-1">
                       <p className="text-xs text-muted-foreground">Check inventory levels above against your stock</p>
-                      <button onClick={() => handleDelete(trip.id)} className="p-1.5 rounded-lg hover:bg-destructive/10">
-                        <Trash2 size={14} className="text-destructive" />
-                      </button>
+                      <div className="flex gap-1">
+                        <button onClick={() => { setEditing(trip); setShowForm(true); }} className="p-1.5 rounded-lg hover:bg-secondary">
+                          <Pencil size={14} className="text-muted-foreground" />
+                        </button>
+                        <button onClick={() => handleDelete(trip.id)} className="p-1.5 rounded-lg hover:bg-destructive/10">
+                          <Trash2 size={14} className="text-destructive" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -168,10 +179,10 @@ export default function Travel() {
         </div>
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setEditing(null); }}>
         <DialogContent className="rounded-2xl max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-heading text-xl">Plan a Trip</DialogTitle></DialogHeader>
-          <TripForm onSubmit={handleSubmit} onCancel={() => setShowForm(false)} />
+          <DialogHeader><DialogTitle className="font-heading text-xl">{editing ? "Edit Trip" : "Plan a Trip"}</DialogTitle></DialogHeader>
+          <TripForm initial={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} />
         </DialogContent>
       </Dialog>
     </div>

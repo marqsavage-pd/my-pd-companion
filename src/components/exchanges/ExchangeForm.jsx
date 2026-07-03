@@ -4,15 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertTriangle } from "lucide-react";
 
-export default function ExchangeForm({ onSubmit, onCancel }) {
+export default function ExchangeForm({ onSubmit, onCancel, initial }) {
   const [form, setForm] = useState({
-    modality: "capd",
-    dextrose_concentration: 1.5,
-    fill_volume: 2000,
-    drain_volume: "",
-    dwell_hours: "",
-    solution_appearance: "clear",
-    notes: "",
+    modality: initial?.modality || "capd",
+    dextrose_concentration: initial?.dextrose_concentration ?? 1.5,
+    fill_volume: initial?.fill_volume ?? 2000,
+    drain_volume: initial?.drain_volume ?? "",
+    dwell_hours: initial?.dwell_hours ?? "",
+    solution_appearance: initial?.solution_appearance || "clear",
+    notes: initial?.notes || "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -29,7 +29,7 @@ export default function ExchangeForm({ onSubmit, onCancel }) {
       drain_volume: drain,
       ultrafiltration: uf,
       dwell_hours: form.dwell_hours ? parseFloat(form.dwell_hours) : null,
-      logged_at: new Date().toISOString(),
+      logged_at: initial?.logged_at || new Date().toISOString(),
     });
     setSaving(false);
   };
@@ -170,7 +170,7 @@ export default function ExchangeForm({ onSubmit, onCancel }) {
       <div className="flex gap-3 pt-2">
         {onCancel && <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-xl">Cancel</Button>}
         <Button type="submit" disabled={saving || !form.drain_volume} className="flex-1 rounded-xl h-12 text-base">
-          {saving ? "Saving..." : "Log Exchange"}
+          {saving ? "Saving..." : (initial ? "Update" : "Log Exchange")}
         </Button>
       </div>
     </form>

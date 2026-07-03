@@ -21,11 +21,11 @@ const symptomTypes = [
   { value: "other", label: "Other" },
 ];
 
-export default function SymptomForm({ onSubmit, onCancel }) {
+export default function SymptomForm({ onSubmit, onCancel, initial }) {
   const [form, setForm] = useState({
-    symptom_type: "",
-    severity: 3,
-    notes: "",
+    symptom_type: initial?.symptom_type || "",
+    severity: initial?.severity ?? 3,
+    notes: initial?.notes || "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -33,7 +33,7 @@ export default function SymptomForm({ onSubmit, onCancel }) {
     e.preventDefault();
     if (!form.symptom_type) return;
     setSaving(true);
-    await onSubmit({ ...form, logged_at: new Date().toISOString() });
+    await onSubmit({ ...form, logged_at: initial?.logged_at || new Date().toISOString() });
     setSaving(false);
   };
 
@@ -92,7 +92,7 @@ export default function SymptomForm({ onSubmit, onCancel }) {
       <div className="flex gap-3 pt-2">
         {onCancel && <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-xl">Cancel</Button>}
         <Button type="submit" disabled={!form.symptom_type || saving} className="flex-1 rounded-xl h-12 text-base">
-          {saving ? "Saving..." : "Log Symptom"}
+          {saving ? "Saving..." : (initial ? "Update" : "Log Symptom")}
         </Button>
       </div>
     </form>

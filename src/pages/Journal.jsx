@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, BookOpen } from "lucide-react";
+import { Plus, Trash2, BookOpen, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,7 @@ export default function Journal() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ title: "", content: "", mood: "okay" });
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
@@ -36,11 +37,22 @@ export default function Journal() {
     e.preventDefault();
     if (!form.content || !form.mood) return;
     setSaving(true);
-    await base44.entities.JournalEntry.create(form);
+    if (editingId) {
+      await base44.entities.JournalEntry.update(editingId, form);
+    } else {
+      await base44.entities.JournalEntry.create(form);
+    }
     setSaving(false);
     setShowForm(false);
+    setEditingId(null);
     setForm({ title: "", content: "", mood: "okay" });
     loadEntries();
+  };
+
+  const handleEdit = (entry) => {
+    setEditingId(entry.id);
+    setForm({ title: entry.title || "", content: entry.content || "", mood: entry.mood || "okay" });
+    setShowForm(true);
   };
 
   const handleDelete = async (id) => {
@@ -59,7 +71,7 @@ export default function Journal() {
           <h1 className="font-heading text-2xl font-bold">Journal</h1>
           <p className="text-sm text-muted-foreground mt-1">Reflect on your day</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="rounded-xl gap-2">
+        <Button onClick={() => { setEditingId(null); setForm({ title: "", content: "", mood: "okay" }); setShowForm(true); }} className="rounded-xl gap-2">
           <Plus size={16} /> Write
         </Button>
       </div>
@@ -70,7 +82,7 @@ export default function Journal() {
             <BookOpen size={24} className="text-muted-foreground" />
           </div>
           <p className="text-muted-foreground">No journal entries yet</p>
-          <Button onClick={() => setShowForm(true)} className="mt-4 rounded-xl">Write your first entry</Button>
+          <Button onClick={() => { setEditingId(null); setForm({ title: "", content: "", mood: "okay" }); setShowForm(true); }} className="mt-4 rounded-xl">Write your first entry</Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -93,12 +105,20 @@ export default function Journal() {
                     <p className={`text-sm text-muted-foreground ${isExpanded ? "" : "line-clamp-2"}`}>{entry.content}</p>
                     <p className="text-[10px] text-muted-foreground mt-2">{moment(entry.created_date).format("MMM D, YYYY · h:mm A")}</p>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(entry.id); }}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-destructive/10 transition-all shrink-0"
-                  >
-                    <Trash2 size={14} className="text-destructive" />
-                  </button>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEdit(entry); }}
+                      className="p-1.5 rounded-lg hover:bg-secondary transition-all"
+                    >
+                      <Pencil size={14} className="text-muted-foreground" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(entry.id); }}
+                      className="p-1.5 rounded-lg hover:bg-destructive/10 transition-all"
+                    >
+                      <Trash2 size={14} className="text-destructive" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -106,9 +126,9 @@ export default function Journal() {
         </div>
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setEditingId(null); }}>
         <DialogContent className="rounded-2xl max-w-md">
-          <DialogHeader><DialogTitle className="font-heading text-xl">New Entry</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="font-heading text-xl">{editingId ? "Edit Entry" : "New Entry"}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">How are you feeling?</label>
@@ -145,7 +165,7 @@ export default function Journal() {
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" onClick={() => setShowForm(false)} className="flex-1 rounded-xl">Cancel</Button>
               <Button type="submit" disabled={!form.content || saving} className="flex-1 rounded-xl h-12 text-base">
-                {saving ? "Saving..." : "Save Entry"}
+                {saving ? "Saving..." : (editingId ? "Update" : "Save Entry")}
               </Button>
             </div>
           </form>

@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-export default function VitalForm({ onSubmit, onCancel }) {
+export default function VitalForm({ onSubmit, onCancel, initial }) {
   const [form, setForm] = useState({
-    weight_lbs: "",
-    systolic_bp: "",
-    diastolic_bp: "",
-    notes: "",
+    weight_lbs: initial?.weight_lbs ?? "",
+    systolic_bp: initial?.systolic_bp ?? "",
+    diastolic_bp: initial?.diastolic_bp ?? "",
+    notes: initial?.notes || "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -21,7 +21,7 @@ export default function VitalForm({ onSubmit, onCancel }) {
       systolic_bp: form.systolic_bp ? parseInt(form.systolic_bp) : null,
       diastolic_bp: form.diastolic_bp ? parseInt(form.diastolic_bp) : null,
       notes: form.notes,
-      measured_at: new Date().toISOString(),
+      measured_at: initial?.measured_at || new Date().toISOString(),
     });
     setSaving(false);
   };
@@ -72,7 +72,7 @@ export default function VitalForm({ onSubmit, onCancel }) {
       <div className="flex gap-3 pt-2">
         {onCancel && <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-xl">Cancel</Button>}
         <Button type="submit" disabled={saving || (!form.weight_lbs && !form.systolic_bp)} className="flex-1 rounded-xl h-12 text-base">
-          {saving ? "Saving..." : "Save Vitals"}
+          {saving ? "Saving..." : (initial ? "Update" : "Save Vitals")}
         </Button>
       </div>
     </form>

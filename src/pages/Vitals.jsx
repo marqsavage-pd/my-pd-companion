@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, HeartPulse, Trash2, Scale } from "lucide-react";
+import { Plus, HeartPulse, Trash2, Scale, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import VitalForm from "@/components/vitals/VitalForm";
@@ -10,6 +10,7 @@ export default function Vitals() {
   const [vitals, setVitals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
 
   useEffect(() => { loadVitals(); }, []);
 
@@ -21,8 +22,13 @@ export default function Vitals() {
   };
 
   const handleSubmit = async (data) => {
-    await base44.entities.VitalSign.create(data);
+    if (editing) {
+      await base44.entities.VitalSign.update(editing.id, data);
+    } else {
+      await base44.entities.VitalSign.create(data);
+    }
     setShowForm(false);
+    setEditing(null);
     loadVitals();
   };
 
@@ -46,7 +52,7 @@ export default function Vitals() {
           <h1 className="font-heading text-2xl font-bold">Vitals</h1>
           <p className="text-sm text-muted-foreground mt-1">Weight & blood pressure</p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="rounded-xl gap-2">
+        <Button onClick={() => { setEditing(null); setShowForm(true); }} className="rounded-xl gap-2">
           <Plus size={16} /> Record
         </Button>
       </div>
@@ -88,7 +94,7 @@ export default function Vitals() {
             <HeartPulse size={24} className="text-muted-foreground" />
           </div>
           <p className="text-muted-foreground">No vitals recorded yet</p>
-          <Button onClick={() => setShowForm(true)} className="mt-4 rounded-xl">Record your vitals</Button>
+          <Button onClick={() => { setEditing(null); setShowForm(true); }} className="mt-4 rounded-xl">Record your vitals</Button>
         </div>
       ) : (
         <div className="space-y-2">
@@ -105,18 +111,23 @@ export default function Vitals() {
                 {v.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{v.notes}</p>}
                 <p className="text-[10px] text-muted-foreground mt-1">{moment(v.measured_at).format("MMM D, YYYY · h:mm A")}</p>
               </div>
-              <button onClick={() => handleDelete(v.id)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-destructive/10 transition-all">
-                <Trash2 size={14} className="text-destructive" />
-              </button>
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                <button onClick={() => { setEditing(v); setShowForm(true); }} className="p-1.5 rounded-lg hover:bg-secondary transition-all">
+                  <Pencil size={14} className="text-muted-foreground" />
+                </button>
+                <button onClick={() => handleDelete(v.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-all">
+                  <Trash2 size={14} className="text-destructive" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setEditing(null); }}>
         <DialogContent className="rounded-2xl max-w-md">
-          <DialogHeader><DialogTitle className="font-heading text-xl">Record Vitals</DialogTitle></DialogHeader>
-          <VitalForm onSubmit={handleSubmit} onCancel={() => setShowForm(false)} />
+          <DialogHeader><DialogTitle className="font-heading text-xl">{editing ? "Edit Vitals" : "Record Vitals"}</DialogTitle></DialogHeader>
+          <VitalForm initial={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} />
         </DialogContent>
       </Dialog>
     </div>
