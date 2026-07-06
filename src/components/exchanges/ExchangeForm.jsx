@@ -11,6 +11,7 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
     fill_volume: initial?.fill_volume ?? 2000,
     drain_volume: initial?.drain_volume ?? "",
     dwell_hours: initial?.dwell_hours ?? "",
+    lost_dwell: initial?.lost_dwell ?? "",
     solution_appearance: initial?.solution_appearance || "clear",
     notes: initial?.notes || "",
   });
@@ -29,6 +30,7 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
       drain_volume: drain,
       ultrafiltration: uf,
       dwell_hours: form.dwell_hours ? parseFloat(form.dwell_hours) : null,
+      lost_dwell: form.lost_dwell ? parseFloat(form.lost_dwell) : null,
       logged_at: initial?.logged_at || new Date().toISOString(),
     });
     setSaving(false);
@@ -126,6 +128,18 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
           value={form.dwell_hours}
           onChange={e => setForm({ ...form, dwell_hours: e.target.value })}
           placeholder="e.g. 4"
+          className="rounded-xl"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Lost Dwell (mL) <span className="text-muted-foreground font-normal">(optional)</span></label>
+        <Input
+          type="number"
+          step="50"
+          value={form.lost_dwell}
+          onChange={e => setForm({ ...form, lost_dwell: e.target.value })}
+          placeholder="e.g. 150"
           className="rounded-xl"
         />
       </div>

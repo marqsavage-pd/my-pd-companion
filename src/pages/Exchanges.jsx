@@ -6,6 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import ExchangeForm from "@/components/exchanges/ExchangeForm";
 import moment from "moment";
 
+const formatDwell = (hours) => {
+  if (!hours) return "—";
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return `${h}:${m.toString().padStart(2, "0")}`;
+};
+
 const appearanceColors = {
   clear: "bg-emerald-100 text-emerald-700",
   cloudy: "bg-red-100 text-red-700",
@@ -111,14 +118,12 @@ export default function Exchanges() {
                           </span>
                           {e.solution_appearance === "cloudy" && <AlertTriangle size={13} className="text-destructive" />}
                         </div>
-                        <div className="grid grid-cols-3 gap-2 mt-2">
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">Fill</p>
-                            <p className="text-sm font-medium">{e.fill_volume} mL</p>
-                          </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase">Drain</p>
-                            <p className="text-sm font-medium">{e.drain_volume} mL</p>
+                            <p className={`text-sm font-medium capitalize ${e.solution_appearance === "clear" ? "text-emerald-600" : e.solution_appearance === "cloudy" ? "text-red-600" : ""}`}>
+                              {e.solution_appearance}
+                            </p>
                           </div>
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase">UF</p>
@@ -126,9 +131,16 @@ export default function Exchanges() {
                               {e.ultrafiltration > 0 ? "+" : ""}{e.ultrafiltration} mL
                             </p>
                           </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase">Dwell Time</p>
+                            <p className="text-sm font-medium">{formatDwell(e.dwell_hours)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase">Lost Dwell</p>
+                            <p className="text-sm font-medium">{e.lost_dwell ? `${e.lost_dwell} mL` : "—"}</p>
+                          </div>
                         </div>
-                        {e.dwell_hours && <p className="text-xs text-muted-foreground mt-1">Dwell: {e.dwell_hours} hrs</p>}
-                        {e.notes && <p className="text-xs text-muted-foreground mt-1 italic">{e.notes}</p>}
+                        {e.notes && <p className="text-xs text-muted-foreground mt-2 italic">{e.notes}</p>}
                         <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(e.created_date).local().format("HH:mm")}</p>
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">

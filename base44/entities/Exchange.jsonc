@@ -32,6 +32,10 @@
     "dwell_hours": {
       "type": "number"
     },
+    "lost_dwell": {
+      "type": "number",
+      "description": "Lost dwell volume in mL"
+    },
     "solution_appearance": {
       "type": "string",
       "enum": [
