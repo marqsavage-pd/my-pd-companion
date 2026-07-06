@@ -29,12 +29,12 @@ export default function Home() {
     setLoading(true);
     const [u, ex, re, v, m, ml, s, j] = await Promise.all([
       base44.auth.me(),
-      base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
-      base44.entities.Exchange.list("-logged_at", 5),
-      base44.entities.VitalSign.list("-measured_at", 5),
+      base44.entities.Exchange.filter({ created_date: { $gte: todayStart } }, "-created_date", 20),
+      base44.entities.Exchange.list("-created_date", 5),
+      base44.entities.VitalSign.list("-created_date", 5),
       base44.entities.Medication.filter({ active: true }),
-      base44.entities.MedicationLog.filter({ taken_at: { $gte: todayStart } }, "-taken_at", 50),
-      base44.entities.Symptom.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 10),
+      base44.entities.MedicationLog.filter({ created_date: { $gte: todayStart } }, "-created_date", 50),
+      base44.entities.Symptom.filter({ created_date: { $gte: todayStart } }, "-created_date", 10),
       base44.entities.JournalEntry.filter({ created_date: { $gte: todayStart } }, "-created_date", 5),
     ]);
     setUser(u);
@@ -137,7 +137,7 @@ export default function Home() {
           </div>
           <Droplets size={32} className="text-primary/30" />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment(lastSession.logged_at).format("h:mm A")}` : "No sessions logged yet"}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment(lastSession.created_date).format("h:mm A")}` : "No sessions logged yet"}</p>
       </div>
 
       {/* Latest vitals */}
@@ -160,8 +160,8 @@ export default function Home() {
             </div>
             <div className="bg-card rounded-2xl border p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Logged</p>
-              <p className="text-lg font-bold mt-1">{moment(latestVital.measured_at).format("h A")}</p>
-              <p className="text-[10px] text-muted-foreground">{moment(latestVital.measured_at).format("MMM D")}</p>
+              <p className="text-lg font-bold mt-1">{moment(latestVital.created_date).format("h A")}</p>
+              <p className="text-[10px] text-muted-foreground">{moment(latestVital.created_date).format("MMM D")}</p>
             </div>
           </div>
         </section>
@@ -189,7 +189,7 @@ export default function Home() {
                       <span className="text-xs text-muted-foreground">{e.dextrose_concentration}% dextrose</span>
                       {isCloudy && <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">cloudy</span>}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{moment(e.logged_at).format("MMM D · h:mm A")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{moment(e.created_date).format("MMM D · h:mm A")}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`text-sm font-bold ${uf > 0 ? "text-emerald-600" : uf < 0 ? "text-amber-600" : "text-muted-foreground"}`}>
@@ -218,7 +218,7 @@ export default function Home() {
                 <div key={s.id} className="shrink-0 p-3 rounded-2xl bg-card border min-w-[120px]">
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mb-1.5 ${severityColors[s.severity]}`}>{s.severity}/5</span>
                   <p className="text-sm font-medium capitalize">{s.symptom_type.replace(/_/g, " ")}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{moment(s.logged_at).format("h:mm A")}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{moment(s.created_date).format("h:mm A")}</p>
                 </div>
               );
             })}

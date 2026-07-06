@@ -21,7 +21,7 @@ export default function Medications() {
     setLoading(true);
     const [m, l] = await Promise.all([
       base44.entities.Medication.list("-created_date", 50),
-      base44.entities.MedicationLog.filter({ taken_at: { $gte: todayStart } }, "-taken_at", 100),
+      base44.entities.MedicationLog.filter({ created_date: { $gte: todayStart } }, "-created_date", 100),
     ]);
     setMeds(m);
     setLogs(l);

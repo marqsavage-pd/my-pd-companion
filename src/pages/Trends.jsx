@@ -23,9 +23,9 @@ export default function Trends() {
     setLoading(true);
     const since = moment().subtract(range, "days").startOf("day").toISOString();
     const [ex, v, s] = await Promise.all([
-      base44.entities.Exchange.filter({ logged_at: { $gte: since } }, "logged_at", 500),
-      base44.entities.VitalSign.filter({ measured_at: { $gte: since } }, "measured_at", 500),
-      base44.entities.Symptom.filter({ logged_at: { $gte: since } }, "logged_at", 500),
+      base44.entities.Exchange.filter({ created_date: { $gte: since } }, "created_date", 500),
+      base44.entities.VitalSign.filter({ created_date: { $gte: since } }, "created_date", 500),
+      base44.entities.Symptom.filter({ created_date: { $gte: since } }, "created_date", 500),
     ]);
     setExchanges(ex);
     setVitals(v);
@@ -45,7 +45,7 @@ export default function Trends() {
   const ufByDay = () => {
     const days = buildDays();
     exchanges.forEach(e => {
-      const day = moment(e.logged_at).format("YYYY-MM-DD");
+      const day = moment(e.created_date).format("YYYY-MM-DD");
       if (days[day]) days[day].uf += e.ultrafiltration || 0;
     });
     return Object.values(days);
@@ -54,7 +54,7 @@ export default function Trends() {
   const weightByDay = () => {
     const days = buildDays();
     vitals.forEach(v => {
-      const day = moment(v.measured_at).format("YYYY-MM-DD");
+      const day = moment(v.created_date).format("YYYY-MM-DD");
       if (days[day] && v.weight_lbs) days[day].weight = v.weight_lbs;
     });
     return Object.values(days);
@@ -63,7 +63,7 @@ export default function Trends() {
   const bpByDay = () => {
     const days = buildDays();
     vitals.forEach(v => {
-      const day = moment(v.measured_at).format("YYYY-MM-DD");
+      const day = moment(v.created_date).format("YYYY-MM-DD");
       if (days[day] && v.systolic_bp) {
         days[day].sys = v.systolic_bp;
         days[day].dia = v.diastolic_bp;
