@@ -6,43 +6,43 @@
 
 @layer base {
   :root {
-    --background: 265 40% 5%;
-    --foreground: 280 30% 92%;
-    --card: 270 35% 8%;
-    --card-foreground: 280 30% 92%;
-    --popover: 270 35% 8%;
-    --popover-foreground: 280 30% 92%;
-    --primary: 280 85% 62%;
-    --primary-foreground: 270 40% 8%;
-    --secondary: 270 35% 14%;
-    --secondary-foreground: 280 30% 92%;
-    --muted: 270 30% 12%;
-    --muted-foreground: 270 20% 60%;
-    --accent: 310 90% 60%;
-    --accent-foreground: 270 40% 8%;
-    --destructive: 0 75% 58%;
-    --destructive-foreground: 280 30% 95%;
-    --border: 270 35% 18%;
-    --input: 270 35% 18%;
-    --ring: 280 85% 62%;
-    --chart-1: 280 85% 62%;
-    --chart-2: 310 90% 60%;
-    --chart-3: 190 90% 55%;
-    --chart-4: 260 70% 70%;
-    --chart-5: 330 80% 60%;
+    --background: 270 25% 98%;
+    --foreground: 265 35% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 265 35% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 265 35% 14%;
+    --primary: 271 78% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 18% 94%;
+    --secondary-foreground: 265 30% 20%;
+    --muted: 270 15% 95%;
+    --muted-foreground: 265 12% 45%;
+    --accent: 188 75% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 270 18% 90%;
+    --input: 270 18% 90%;
+    --ring: 271 78% 50%;
+    --chart-1: 271 78% 50%;
+    --chart-2: 188 75% 40%;
+    --chart-3: 265 60% 65%;
+    --chart-4: 200 70% 50%;
+    --chart-5: 320 60% 55%;
     --radius: 0.75rem;
     --font-heading: 'Playfair Display', serif;
     --font-body: 'Inter', sans-serif;
     --font-display: 'Playfair Display', serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --sidebar-background: 270 38% 7%;
-    --sidebar-foreground: 280 30% 92%;
-    --sidebar-primary: 280 85% 62%;
-    --sidebar-primary-foreground: 270 40% 8%;
-    --sidebar-accent: 270 30% 12%;
-    --sidebar-accent-foreground: 280 30% 92%;
-    --sidebar-border: 270 35% 18%;
-    --sidebar-ring: 280 85% 62%;
+    --sidebar-background: 265 45% 11%;
+    --sidebar-foreground: 270 25% 90%;
+    --sidebar-primary: 271 78% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 265 35% 18%;
+    --sidebar-accent-foreground: 270 25% 92%;
+    --sidebar-border: 265 35% 20%;
+    --sidebar-ring: 271 78% 55%;
   }
 }
 
