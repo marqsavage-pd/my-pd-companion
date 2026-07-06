@@ -120,7 +120,7 @@ export default function Exchanges() {
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                           <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">Drain</p>
+                            <p className="text-[10px] text-muted-foreground uppercase">Drain Clarity</p>
                             <p className={`text-sm font-medium capitalize ${e.solution_appearance === "clear" ? "text-emerald-600" : e.solution_appearance === "cloudy" ? "text-red-600" : ""}`}>
                               {e.solution_appearance}
                             </p>
