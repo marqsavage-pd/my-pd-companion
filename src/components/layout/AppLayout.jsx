@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Home, Droplets, HeartPulse, Activity, Pill, TrendingUp, BookOpen, Package, Plane, Menu, X, LogOut } from "lucide-react";
+import { Home, Droplets, HeartPulse, Activity, TrendingUp, BookOpen, Package, Plane, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 
@@ -8,7 +8,6 @@ const navItems = [
   { path: "/exchanges", label: "Exchanges", icon: Droplets },
   { path: "/vitals", label: "Vitals", icon: HeartPulse },
   { path: "/symptoms", label: "Symptoms", icon: Activity },
-  { path: "/medications", label: "Meds", icon: Pill },
   { path: "/trends", label: "Trends", icon: TrendingUp },
   { path: "/journal", label: "Journal", icon: BookOpen },
   { path: "/inventory", label: "Inventory", icon: Package },

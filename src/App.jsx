@@ -19,7 +19,7 @@ import Home from '@/pages/Home';
 import Exchanges from '@/pages/Exchanges';
 import Vitals from '@/pages/Vitals';
 import Symptoms from '@/pages/Symptoms';
-import Medications from '@/pages/Medications';
+
 import Trends from '@/pages/Trends';
 import Journal from '@/pages/Journal';
 import Inventory from '@/pages/Inventory';
@@ -57,7 +57,7 @@ const AuthenticatedApp = () => {
           <Route path="/exchanges" element={<Exchanges />} />
           <Route path="/vitals" element={<Vitals />} />
           <Route path="/symptoms" element={<Symptoms />} />
-          <Route path="/medications" element={<Medications />} />
+
           <Route path="/trends" element={<Trends />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/inventory" element={<Inventory />} />

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Droplets, HeartPulse, Activity, Pill, BookOpen, Plus, Check, Clock, ArrowRight, AlertTriangle } from "lucide-react";
+import { Droplets, HeartPulse, Activity, BookOpen, Plus, ArrowRight, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ExchangeForm from "@/components/exchanges/ExchangeForm";
@@ -12,8 +12,7 @@ export default function Home() {
   const [exchanges, setExchanges] = useState([]);
   const [recentExchanges, setRecentExchanges] = useState([]);
   const [vitals, setVitals] = useState([]);
-  const [meds, setMeds] = useState([]);
-  const [medLogs, setMedLogs] = useState([]);
+
   const [symptoms, setSymptoms] = useState([]);
   const [journal, setJournal] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,13 +26,11 @@ export default function Home() {
 
   const loadData = async () => {
     setLoading(true);
-    const [u, ex, re, v, m, ml, s, j] = await Promise.all([
+    const [u, ex, re, v, s, j] = await Promise.all([
       base44.auth.me(),
       base44.entities.Exchange.filter({ created_date: { $gte: todayStart } }, "-created_date", 20),
       base44.entities.Exchange.list("-created_date", 5),
       base44.entities.VitalSign.list("-created_date", 5),
-      base44.entities.Medication.filter({ active: true }),
-      base44.entities.MedicationLog.filter({ created_date: { $gte: todayStart } }, "-created_date", 50),
       base44.entities.Symptom.filter({ created_date: { $gte: todayStart } }, "-created_date", 10),
       base44.entities.JournalEntry.filter({ created_date: { $gte: todayStart } }, "-created_date", 5),
     ]);
@@ -41,8 +38,6 @@ export default function Home() {
     setExchanges(ex);
     setRecentExchanges(re);
     setVitals(v);
-    setMeds(m);
-    setMedLogs(ml);
     setSymptoms(s);
     setJournal(j);
     setLoading(false);
@@ -60,15 +55,7 @@ export default function Home() {
     loadData();
   };
 
-  const handleQuickMedLog = async (med) => {
-    await base44.entities.MedicationLog.create({
-      medication_id: med.id, medication_name: med.name,
-      taken_at: new Date().toISOString(), status: "taken",
-    });
-    loadData();
-  };
 
-  const isMedTaken = (medId) => medLogs.some(l => l.medication_id === medId);
   const lastSession = recentExchanges[0];
   const totalUF = lastSession?.ultrafiltration || 0;
   const latestVital = vitals[0];
