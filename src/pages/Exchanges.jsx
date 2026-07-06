@@ -113,9 +113,6 @@ export default function Exchanges() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-sm font-semibold uppercase">{e.modality}</p>
                           <span className="text-xs text-muted-foreground">{e.dextrose_concentration}% dextrose</span>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${appearanceColors[e.solution_appearance] || "bg-secondary text-muted-foreground"}`}>
-                            {e.solution_appearance}
-                          </span>
                           {e.solution_appearance === "cloudy" && <AlertTriangle size={13} className="text-destructive" />}
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
