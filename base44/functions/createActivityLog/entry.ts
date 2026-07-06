@@ -4,7 +4,8 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const { api_key, title, description, type, created_date, source_id } = await req.json();
-    if (api_key !== Deno.env.get("PD_COMPANION_API_KEY")) {
+    const expectedKey = Deno.env.get("PD_COMPANION_API_KEY");
+    if (!expectedKey || api_key !== expectedKey) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const record = await base44.asServiceRole.entities.ActivityLog.create({
