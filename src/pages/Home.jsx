@@ -61,6 +61,13 @@ export default function Home() {
   const latestVital = vitals[0];
   const hasCloudy = exchanges.some(e => e.solution_appearance === "cloudy");
 
+  const formatDwell = (hours) => {
+    if (!hours) return null;
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h}:${m.toString().padStart(2, "0")}`;
+  };
+
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -177,6 +184,7 @@ export default function Home() {
                       {isCloudy && <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">cloudy</span>}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{moment.utc(e.created_date).local().format("MMM D · HH:mm")}</p>
+                    {formatDwell(e.dwell_hours) && <p className="text-[10px] text-muted-foreground mt-0.5">Dwell: {formatDwell(e.dwell_hours)}</p>}
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`text-sm font-bold ${uf > 0 ? "text-emerald-600" : uf < 0 ? "text-amber-600" : "text-muted-foreground"}`}>
