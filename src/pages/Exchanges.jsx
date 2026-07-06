@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Droplets, Trash2, AlertTriangle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import ExchangeForm from "@/components/exchanges/ExchangeForm";
 import moment from "moment";
 
@@ -25,12 +26,13 @@ export default function Exchanges() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useState(null);
 
   useEffect(() => { loadExchanges(); }, []);
 
   const loadExchanges = async () => {
     setLoading(true);
-    const data = await base44.entities.Exchange.list("-created_date", 100);
+    const data = await base44.entities.Exchange.list("-created_date", 500);
     setExchanges(data);
     setLoading(false);
   };
@@ -51,7 +53,38 @@ export default function Exchanges() {
     loadExchanges();
   };
 
-  const grouped = exchanges.reduce((acc, e) => {
+  const periods = (() => {
+    if (exchanges.length === 0) return [];
+    const oldest = moment.utc(exchanges[exchanges.length - 1].created_date).local();
+    const result = [];
+    let end = moment();
+    let idx = 0;
+    while (end.isAfter(oldest)) {
+      const start = moment(end).subtract(30, "days");
+      result.push({
+        key: `p${idx}`,
+        label: idx === 0
+          ? `Last 30 days · ${start.format("MMM D")} – ${end.format("MMM D")}`
+          : `${start.format("MMM D, YYYY")} – ${end.format("MMM D, YYYY")}`,
+        start: start.valueOf(),
+        end: end.valueOf(),
+      });
+      end = start;
+      idx++;
+    }
+    return result;
+  })();
+
+  const activePeriod = periods.find(p => p.key === selectedPeriod) || periods[0];
+
+  const periodExchanges = activePeriod
+    ? exchanges.filter(e => {
+        const ts = moment.utc(e.created_date).local().valueOf();
+        return ts >= activePeriod.start && ts < activePeriod.end;
+      })
+    : exchanges;
+
+  const grouped = periodExchanges.reduce((acc, e) => {
     const day = moment.utc(e.created_date).local().format("YYYY-MM-DD");
     if (!acc[day]) acc[day] = [];
     acc[day].push(e);
@@ -83,6 +116,22 @@ export default function Exchanges() {
         <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.created_date).local().format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
       </div>
 
+      {periods.length > 1 && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Period:</span>
+          <Select value={selectedPeriod || periods[0]?.key} onValueChange={setSelectedPeriod}>
+            <SelectTrigger className="rounded-xl max-w-xs h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {periods.map(p => (
+                <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {exchanges.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl bg-secondary mx-auto mb-4 flex items-center justify-center">
@@ -90,6 +139,10 @@ export default function Exchanges() {
           </div>
           <p className="text-muted-foreground">No exchanges logged yet</p>
           <Button onClick={() => { setEditing(null); setShowForm(true); }} className="mt-4 rounded-xl">Log your first exchange</Button>
+        </div>
+      ) : periodExchanges.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-sm text-muted-foreground">No exchanges in this period</p>
         </div>
       ) : (
         Object.entries(grouped).map(([day, items]) => {
