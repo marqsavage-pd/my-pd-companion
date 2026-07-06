@@ -8,6 +8,7 @@ import VitalCard from "@/components/vitals/VitalCard";
 import moment from "moment";
 
 const HISTORICAL_CUTOFF = moment().subtract(30, "days").startOf("day");
+const eventDate = (v) => moment.utc(v.measured_at || v.created_date).local();
 
 export default function Vitals() {
   const [vitals, setVitals] = useState([]);
@@ -21,6 +22,7 @@ export default function Vitals() {
   const loadVitals = async () => {
     setLoading(true);
     const data = await base44.entities.VitalSign.list("-created_date", 500);
+    data.sort((a, b) => eventDate(b) - eventDate(a));
     setVitals(data);
     setLoading(false);
   };
@@ -49,13 +51,13 @@ export default function Vitals() {
   const prev = vitals[1];
   const weightDelta = latest?.weight_lbs && prev?.weight_lbs ? (latest.weight_lbs - prev.weight_lbs) : 0;
 
-  const isHistorical = (v) => moment.utc(v.created_date).local().valueOf() < HISTORICAL_CUTOFF.valueOf();
+  const isHistorical = (v) => eventDate(v).valueOf() < HISTORICAL_CUTOFF.valueOf();
 
   const recentVitals = vitals.filter(v => !isHistorical(v));
   const historicalVitals = vitals.filter(v => isHistorical(v));
 
   const groupByDay = (items) => items.reduce((acc, v) => {
-    const day = moment.utc(v.created_date).local().format("YYYY-MM-DD");
+    const day = eventDate(v).format("YYYY-MM-DD");
     if (!acc[day]) acc[day] = [];
     acc[day].push(v);
     return acc;

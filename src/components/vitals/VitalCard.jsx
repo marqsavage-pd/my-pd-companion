@@ -1,6 +1,8 @@
 import { HeartPulse, Pencil, Trash2 } from "lucide-react";
 import moment from "moment";
 
+const eventDate = (v) => moment.utc(v.measured_at || v.created_date).local();
+
 export default function VitalCard({ vital, onEdit, onDelete }) {
   const v = vital;
   return (
@@ -14,7 +16,7 @@ export default function VitalCard({ vital, onEdit, onDelete }) {
           {v.systolic_bp && <span className="text-sm font-semibold">{v.systolic_bp}/{v.diastolic_bp} mmHg</span>}
         </div>
         {v.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{v.notes}</p>}
-        <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(v.created_date).local().format("MMM D, YYYY · HH:mm")}</p>
+        <p className="text-[10px] text-muted-foreground mt-1">{eventDate(v).format("MMM D, YYYY · HH:mm")}</p>
       </div>
       {onEdit && onDelete && (
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">

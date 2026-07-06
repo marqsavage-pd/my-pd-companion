@@ -8,7 +8,8 @@ import ExchangeForm from "@/components/exchanges/ExchangeForm";
 import ExchangeCard from "@/components/exchanges/ExchangeCard";
 import moment from "moment";
 
-const HISTORICAL_CUTOFF = moment("2026-07-01").endOf("day");
+const HISTORICAL_CUTOFF = moment().subtract(30, "days").startOf("day");
+const eventDate = (e) => moment.utc(e.logged_at || e.created_date).local();
 
 export default function Exchanges() {
   const [exchanges, setExchanges] = useState([]);
@@ -23,6 +24,7 @@ export default function Exchanges() {
   const loadExchanges = async () => {
     setLoading(true);
     const data = await base44.entities.Exchange.list("-created_date", 500);
+    data.sort((a, b) => eventDate(b) - eventDate(a));
     setExchanges(data);
     setLoading(false);
   };
@@ -43,7 +45,7 @@ export default function Exchanges() {
     loadExchanges();
   };
 
-  const isHistorical = (e) => moment.utc(e.created_date).local().valueOf() <= HISTORICAL_CUTOFF.valueOf();
+  const isHistorical = (e) => eventDate(e).valueOf() < HISTORICAL_CUTOFF.valueOf();
 
   const recentExchanges = exchanges.filter(e => !isHistorical(e));
   const historicalExchanges = exchanges.filter(e => isHistorical(e));
@@ -56,13 +58,13 @@ export default function Exchanges() {
           `${e.dextrose_concentration}% dextrose`,
           e.solution_appearance,
           e.notes,
-          moment.utc(e.created_date).local().format("MMM D, YYYY HH:mm"),
+          eventDate(e).format("MMM D, YYYY HH:mm"),
         ].filter(Boolean).join(" ").toLowerCase().includes(q);
       })
     : null;
 
   const groupByDay = (items) => items.reduce((acc, e) => {
-    const day = moment.utc(e.created_date).local().format("YYYY-MM-DD");
+    const day = eventDate(e).format("YYYY-MM-DD");
     if (!acc[day]) acc[day] = [];
     acc[day].push(e);
     return acc;
@@ -114,7 +116,7 @@ export default function Exchanges() {
       <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5">
         <p className="text-xs font-semibold text-primary uppercase tracking-wider">Last Session UF</p>
         <p className="text-3xl font-bold text-primary mt-1">{lastUF > 0 ? "+" : ""}{lastUF} <span className="text-lg font-medium">mL</span></p>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.created_date).local().format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${eventDate(lastSession).format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
       </div>
 
       <div className="relative">
@@ -169,7 +171,7 @@ export default function Exchanges() {
                   {showHistorical ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   <h3 className="text-sm font-semibold">Historical</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">{historicalExchanges.length} entries · on or before Jul 1</span>
+                <span className="text-xs text-muted-foreground">{historicalExchanges.length} entries · older than 30 days</span>
               </button>
               {showHistorical && (
                 <div className="space-y-6 mt-3">

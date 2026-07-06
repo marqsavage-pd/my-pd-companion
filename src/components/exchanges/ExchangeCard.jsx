@@ -1,6 +1,8 @@
 import { Droplets, AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import moment from "moment";
 
+const eventDate = (e) => moment.utc(e.logged_at || e.created_date).local();
+
 const formatDwell = (hours) => {
   if (!hours) return "—";
   const h = Math.floor(hours);
@@ -49,7 +51,7 @@ export default function ExchangeCard({ exchange, onEdit, onDelete }) {
             </div>
           </div>
           {e.notes && <p className="text-xs text-muted-foreground mt-2 italic">{e.notes}</p>}
-          <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(e.created_date).local().format("HH:mm")}</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{eventDate(e).format("HH:mm")}</p>
         </div>
         {onEdit && onDelete && (
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
