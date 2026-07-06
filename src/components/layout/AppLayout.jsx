@@ -1,7 +1,8 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Home, Droplets, HeartPulse, Activity, TrendingUp, BookOpen, Package, Plane, Menu, X, LogOut } from "lucide-react";
+import { Home, Droplets, HeartPulse, Activity, TrendingUp, BookOpen, Package, Plane, Menu, X, LogOut, Sun, Moon, Monitor } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useTheme } from "@/lib/ThemeContext";
 
 const navItems = [
   { path: "/", label: "Today", icon: Home },
@@ -17,6 +18,8 @@ const navItems = [
 export default function AppLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, cycle } = useTheme();
+  const ThemeIcon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
 
   const handleLogout = () => { base44.auth.logout("/login"); };
 
@@ -38,7 +41,10 @@ export default function AppLayout() {
                 <item.icon size={18} />{item.label}
               </Link>
             ))}
-            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground w-full mt-2 border-t pt-4">
+            <button onClick={cycle} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground w-full border-t pt-4">
+              <ThemeIcon size={18} /><span className="capitalize">{theme}</span>
+            </button>
+            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground w-full mt-2">
               <LogOut size={18} />Log out
             </button>
           </div>
@@ -58,6 +64,12 @@ export default function AppLayout() {
             </Link>
           ))}
         </nav>
+        <div className="flex items-center gap-2">
+          <button onClick={cycle} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground w-full">
+            <ThemeIcon size={18} />
+            <span className="capitalize">{theme}</span>
+          </button>
+        </div>
         <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
           <LogOut size={18} />Log out
         </button>
