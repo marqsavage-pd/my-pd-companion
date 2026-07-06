@@ -50,7 +50,7 @@ export default function Symptoms() {
   };
 
   const grouped = symptoms.reduce((acc, s) => {
-    const day = moment(s.created_date).format("YYYY-MM-DD");
+    const day = moment.utc(s.created_date).local().format("YYYY-MM-DD");
     if (!acc[day]) acc[day] = [];
     acc[day].push(s);
     return acc;
@@ -101,7 +101,7 @@ export default function Symptoms() {
                         {isExitSite && s.severity >= 3 && <AlertTriangle size={13} className="text-destructive" />}
                       </div>
                       {s.notes && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.notes}</p>}
-                      <p className="text-[10px] text-muted-foreground mt-1">{moment(s.created_date).format("h:mm A")}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(s.created_date).local().format("h:mm A")}</p>
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                       <button onClick={() => { setEditing(s); setShowForm(true); }} className="p-1.5 rounded-lg hover:bg-secondary transition-all">

@@ -83,7 +83,7 @@ export default function Vitals() {
             {latest.systolic_bp ? (
               <p className="text-2xl font-bold">{latest.systolic_bp}/{latest.diastolic_bp} <span className="text-sm font-medium text-muted-foreground">mmHg</span></p>
             ) : <p className="text-2xl font-bold text-muted-foreground">—</p>}
-            <p className="text-xs text-muted-foreground mt-1">{moment(latest.created_date).format("MMM D, h:mm A")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{moment.utc(latest.created_date).local().format("MMM D, h:mm A")}</p>
           </div>
         </div>
       )}
@@ -109,7 +109,7 @@ export default function Vitals() {
                   {v.systolic_bp && <span className="text-sm font-semibold">{v.systolic_bp}/{v.diastolic_bp} mmHg</span>}
                 </div>
                 {v.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{v.notes}</p>}
-                <p className="text-[10px] text-muted-foreground mt-1">{moment(v.created_date).format("MMM D, YYYY · h:mm A")}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(v.created_date).local().format("MMM D, YYYY · h:mm A")}</p>
               </div>
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button onClick={() => { setEditing(v); setShowForm(true); }} className="p-1.5 rounded-lg hover:bg-secondary transition-all">
