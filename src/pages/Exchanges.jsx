@@ -113,15 +113,12 @@ export default function Exchanges() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-sm font-semibold uppercase">{e.modality}</p>
                           <span className="text-xs text-muted-foreground">{e.dextrose_concentration}% dextrose</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${appearanceColors[e.solution_appearance] || "bg-secondary text-muted-foreground"}`}>
+                            {e.solution_appearance}
+                          </span>
                           {e.solution_appearance === "cloudy" && <AlertTriangle size={13} className="text-destructive" />}
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">Drain Clarity</p>
-                            <p className={`text-sm font-medium capitalize ${e.solution_appearance === "clear" ? "text-emerald-600" : e.solution_appearance === "cloudy" ? "text-red-600" : ""}`}>
-                              {e.solution_appearance}
-                            </p>
-                          </div>
+                        <div className="grid grid-cols-3 gap-2 mt-2">
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase">UF</p>
                             <p className={`text-sm font-bold ${e.ultrafiltration >= 0 ? "text-emerald-600" : "text-amber-600"}`}>
