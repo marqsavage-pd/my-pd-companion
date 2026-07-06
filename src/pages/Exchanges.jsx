@@ -10,6 +10,7 @@ import moment from "moment";
 
 const MONTH_START = moment().startOf("month");
 const JUNE_START = moment().subtract(1, "month").startOf("month");
+const prevMonthLabel = moment().subtract(1, "month").format("MMMM");
 const eventDate = (e) => moment.utc(e.logged_at || e.created_date).local();
 
 export default function Exchanges() {
@@ -19,7 +20,7 @@ export default function Exchanges() {
   const [editing, setEditing] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showHistorical, setShowHistorical] = useState(false);
-  const [showJune, setShowJune] = useState(false);
+  const [showPrevMonth, setShowPrevMonth] = useState(false);
 
   useEffect(() => { loadExchanges(); }, []);
 
@@ -48,7 +49,7 @@ export default function Exchanges() {
   };
 
   const recentExchanges = exchanges.filter(e => eventDate(e).valueOf() >= MONTH_START.valueOf());
-  const juneExchanges = exchanges.filter(e => eventDate(e).valueOf() >= JUNE_START.valueOf() && eventDate(e).valueOf() < MONTH_START.valueOf());
+  const prevMonthExchanges = exchanges.filter(e => eventDate(e).valueOf() >= JUNE_START.valueOf() && eventDate(e).valueOf() < MONTH_START.valueOf());
   const historicalExchanges = exchanges.filter(e => eventDate(e).valueOf() < JUNE_START.valueOf());
 
   const searchResults = searchQuery.trim()
@@ -72,7 +73,7 @@ export default function Exchanges() {
   }, {});
 
   const recentGrouped = groupByDay(recentExchanges);
-  const juneGrouped = groupByDay(juneExchanges);
+  const prevMonthGrouped = groupByDay(prevMonthExchanges);
   const historicalGrouped = groupByDay(historicalExchanges);
 
   const lastSession = exchanges[0];
@@ -156,28 +157,28 @@ export default function Exchanges() {
         )
       ) : (
         <>
-          {recentExchanges.length === 0 && juneExchanges.length === 0 && historicalExchanges.length > 0 && (
+          {recentExchanges.length === 0 && prevMonthExchanges.length === 0 && historicalExchanges.length > 0 && (
             <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">All exchanges are in the sections below</p>
             </div>
           )}
           {Object.entries(recentGrouped).map(([day, items]) => renderDaySection(day, items))}
 
-          {juneExchanges.length > 0 && (
+          {prevMonthExchanges.length > 0 && (
             <section>
               <button
-                onClick={() => setShowJune(!showJune)}
+                onClick={() => setShowPrevMonth(!showPrevMonth)}
                 className="flex items-center justify-between w-full p-4 rounded-2xl bg-secondary hover:bg-secondary/80 transition-all"
               >
                 <div className="flex items-center gap-2">
-                  {showJune ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  <h3 className="text-sm font-semibold">June</h3>
+                  {showPrevMonth ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <h3 className="text-sm font-semibold">{prevMonthLabel}</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">{juneExchanges.length} entries</span>
+                <span className="text-xs text-muted-foreground">{prevMonthExchanges.length} entries</span>
               </button>
-              {showJune && (
+              {showPrevMonth && (
                 <div className="space-y-6 mt-3">
-                  {Object.entries(juneGrouped).map(([day, items]) => renderDaySection(day, items))}
+                  {Object.entries(prevMonthGrouped).map(([day, items]) => renderDaySection(day, items))}
                 </div>
               )}
             </section>
@@ -193,7 +194,7 @@ export default function Exchanges() {
                   {showHistorical ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   <h3 className="text-sm font-semibold">Historical</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">{historicalExchanges.length} entries · before June</span>
+                <span className="text-xs text-muted-foreground">{historicalExchanges.length} entries · before {prevMonthLabel}</span>
               </button>
               {showHistorical && (
                 <div className="space-y-6 mt-3">

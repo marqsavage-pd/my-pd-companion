@@ -10,6 +10,7 @@ import moment from "moment";
 
 const MONTH_START = moment().startOf("month");
 const JUNE_START = moment().subtract(1, "month").startOf("month");
+const prevMonthLabel = moment().subtract(1, "month").format("MMMM");
 const eventDate = (v) => moment.utc(v.measured_at || v.created_date).local();
 
 export default function Vitals() {
@@ -18,7 +19,7 @@ export default function Vitals() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [showHistorical, setShowHistorical] = useState(false);
-  const [showJune, setShowJune] = useState(false);
+  const [showPrevMonth, setShowPrevMonth] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => { loadVitals(); }, []);
@@ -56,7 +57,7 @@ export default function Vitals() {
   const weightDelta = latest?.weight_lbs && prev?.weight_lbs ? (latest.weight_lbs - prev.weight_lbs) : 0;
 
   const recentVitals = vitals.filter(v => eventDate(v).valueOf() >= MONTH_START.valueOf());
-  const juneVitals = vitals.filter(v => eventDate(v).valueOf() >= JUNE_START.valueOf() && eventDate(v).valueOf() < MONTH_START.valueOf());
+  const prevMonthVitals = vitals.filter(v => eventDate(v).valueOf() >= JUNE_START.valueOf() && eventDate(v).valueOf() < MONTH_START.valueOf());
   const historicalVitals = vitals.filter(v => eventDate(v).valueOf() < JUNE_START.valueOf());
 
   const searchResults = searchQuery.trim()
@@ -79,7 +80,7 @@ export default function Vitals() {
   }, {});
 
   const recentGrouped = groupByDay(recentVitals);
-  const juneGrouped = groupByDay(juneVitals);
+  const prevMonthGrouped = groupByDay(prevMonthVitals);
   const historicalGrouped = groupByDay(historicalVitals);
 
   const handleEdit = (v) => { setEditing(v); setShowForm(true); };
@@ -186,28 +187,28 @@ export default function Vitals() {
         )
       ) : (
         <>
-          {recentVitals.length === 0 && juneVitals.length === 0 && historicalVitals.length > 0 && (
+          {recentVitals.length === 0 && prevMonthVitals.length === 0 && historicalVitals.length > 0 && (
             <div className="text-center py-8">
               <p className="text-sm text-muted-foreground">All vitals are in the sections below</p>
             </div>
           )}
           {Object.entries(recentGrouped).map(([day, items]) => renderDaySection(day, items))}
 
-          {juneVitals.length > 0 && (
+          {prevMonthVitals.length > 0 && (
             <section>
               <button
-                onClick={() => setShowJune(!showJune)}
+                onClick={() => setShowPrevMonth(!showPrevMonth)}
                 className="flex items-center justify-between w-full p-4 rounded-2xl bg-secondary hover:bg-secondary/80 transition-all"
               >
                 <div className="flex items-center gap-2">
-                  {showJune ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  <h3 className="text-sm font-semibold">June</h3>
+                  {showPrevMonth ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <h3 className="text-sm font-semibold">{prevMonthLabel}</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">{juneVitals.length} entries</span>
+                <span className="text-xs text-muted-foreground">{prevMonthVitals.length} entries</span>
               </button>
-              {showJune && (
+              {showPrevMonth && (
                 <div className="space-y-6 mt-3">
-                  {Object.entries(juneGrouped).map(([day, items]) => renderDaySection(day, items))}
+                  {Object.entries(prevMonthGrouped).map(([day, items]) => renderDaySection(day, items))}
                 </div>
               )}
             </section>
@@ -223,7 +224,7 @@ export default function Vitals() {
                   {showHistorical ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   <h3 className="text-sm font-semibold">Historical</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">{historicalVitals.length} entries · before June</span>
+                <span className="text-xs text-muted-foreground">{historicalVitals.length} entries · before {prevMonthLabel}</span>
               </button>
               {showHistorical && (
                 <div className="space-y-6 mt-3">
