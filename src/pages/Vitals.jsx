@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, HeartPulse, ChevronDown, ChevronRight, Scale } from "lucide-react";
+import { Plus, HeartPulse, ChevronDown, ChevronRight, Scale, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import VitalForm from "@/components/vitals/VitalForm";
 import VitalCard from "@/components/vitals/VitalCard";
 import moment from "moment";
 
-const HISTORICAL_CUTOFF = moment().subtract(30, "days").startOf("day");
+const MONTH_START = moment().startOf("month");
+const JUNE_START = moment().subtract(1, "month").startOf("month");
 const eventDate = (v) => moment.utc(v.measured_at || v.created_date).local();
 
 export default function Vitals() {
@@ -16,6 +18,8 @@ export default function Vitals() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [showHistorical, setShowHistorical] = useState(false);
+  const [showJune, setShowJune] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => { loadVitals(); }, []);
 
@@ -51,10 +55,21 @@ export default function Vitals() {
   const prev = vitals[1];
   const weightDelta = latest?.weight_lbs && prev?.weight_lbs ? (latest.weight_lbs - prev.weight_lbs) : 0;
 
-  const isHistorical = (v) => eventDate(v).valueOf() < HISTORICAL_CUTOFF.valueOf();
+  const recentVitals = vitals.filter(v => eventDate(v).valueOf() >= MONTH_START.valueOf());
+  const juneVitals = vitals.filter(v => eventDate(v).valueOf() >= JUNE_START.valueOf() && eventDate(v).valueOf() < MONTH_START.valueOf());
+  const historicalVitals = vitals.filter(v => eventDate(v).valueOf() < JUNE_START.valueOf());
 
-  const recentVitals = vitals.filter(v => !isHistorical(v));
-  const historicalVitals = vitals.filter(v => isHistorical(v));
+  const searchResults = searchQuery.trim()
+    ? vitals.filter(v => {
+        const q = searchQuery.toLowerCase();
+        return [
+          v.weight_lbs ? `${v.weight_lbs} lbs` : "",
+          v.systolic_bp ? `${v.systolic_bp}/${v.diastolic_bp} mmHg` : "",
+          v.notes,
+          eventDate(v).format("MMM D, YYYY HH:mm"),
+        ].filter(Boolean).join(" ").toLowerCase().includes(q);
+      })
+    : null;
 
   const groupByDay = (items) => items.reduce((acc, v) => {
     const day = eventDate(v).format("YYYY-MM-DD");
@@ -64,6 +79,7 @@ export default function Vitals() {
   }, {});
 
   const recentGrouped = groupByDay(recentVitals);
+  const juneGrouped = groupByDay(juneVitals);
   const historicalGrouped = groupByDay(historicalVitals);
 
   const handleEdit = (v) => { setEditing(v); setShowForm(true); };
@@ -135,6 +151,16 @@ export default function Vitals() {
         </div>
       )}
 
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search vitals by weight, BP, notes, date..."
+          className="rounded-xl pl-9"
+        />
+      </div>
+
       {vitals.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl bg-secondary mx-auto mb-4 flex items-center justify-center">
@@ -143,14 +169,49 @@ export default function Vitals() {
           <p className="text-muted-foreground">No vitals recorded yet</p>
           <Button onClick={() => { setEditing(null); setShowForm(true); }} className="mt-4 rounded-xl">Record your vitals</Button>
         </div>
+      ) : searchResults ? (
+        searchResults.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-sm text-muted-foreground">No vitals match "{searchQuery}"</p>
+          </div>
+        ) : (
+          <section>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">{searchResults.length} result{searchResults.length !== 1 ? "s" : ""}</h3>
+            <div className="space-y-2">
+              {searchResults.map(v => (
+                <VitalCard key={v.id} vital={v} onEdit={handleEdit} onDelete={handleDelete} />
+              ))}
+            </div>
+          </section>
+        )
       ) : (
         <>
-          {recentVitals.length === 0 && historicalVitals.length > 0 && (
+          {recentVitals.length === 0 && juneVitals.length === 0 && historicalVitals.length > 0 && (
             <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">All vitals are in the Historical section below</p>
+              <p className="text-sm text-muted-foreground">All vitals are in the sections below</p>
             </div>
           )}
           {Object.entries(recentGrouped).map(([day, items]) => renderDaySection(day, items))}
+
+          {juneVitals.length > 0 && (
+            <section>
+              <button
+                onClick={() => setShowJune(!showJune)}
+                className="flex items-center justify-between w-full p-4 rounded-2xl bg-secondary hover:bg-secondary/80 transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  {showJune ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <h3 className="text-sm font-semibold">June</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">{juneVitals.length} entries</span>
+              </button>
+              {showJune && (
+                <div className="space-y-6 mt-3">
+                  {Object.entries(juneGrouped).map(([day, items]) => renderDaySection(day, items))}
+                </div>
+              )}
+            </section>
+          )}
 
           {historicalVitals.length > 0 && (
             <section>
@@ -162,7 +223,7 @@ export default function Vitals() {
                   {showHistorical ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   <h3 className="text-sm font-semibold">Historical</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">{historicalVitals.length} entries · older than 30 days</span>
+                <span className="text-xs text-muted-foreground">{historicalVitals.length} entries · before June</span>
               </button>
               {showHistorical && (
                 <div className="space-y-6 mt-3">

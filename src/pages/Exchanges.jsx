@@ -8,7 +8,8 @@ import ExchangeForm from "@/components/exchanges/ExchangeForm";
 import ExchangeCard from "@/components/exchanges/ExchangeCard";
 import moment from "moment";
 
-const HISTORICAL_CUTOFF = moment().subtract(30, "days").startOf("day");
+const MONTH_START = moment().startOf("month");
+const JUNE_START = moment().subtract(1, "month").startOf("month");
 const eventDate = (e) => moment.utc(e.logged_at || e.created_date).local();
 
 export default function Exchanges() {
@@ -18,6 +19,7 @@ export default function Exchanges() {
   const [editing, setEditing] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showHistorical, setShowHistorical] = useState(false);
+  const [showJune, setShowJune] = useState(false);
 
   useEffect(() => { loadExchanges(); }, []);
 
@@ -45,10 +47,9 @@ export default function Exchanges() {
     loadExchanges();
   };
 
-  const isHistorical = (e) => eventDate(e).valueOf() < HISTORICAL_CUTOFF.valueOf();
-
-  const recentExchanges = exchanges.filter(e => !isHistorical(e));
-  const historicalExchanges = exchanges.filter(e => isHistorical(e));
+  const recentExchanges = exchanges.filter(e => eventDate(e).valueOf() >= MONTH_START.valueOf());
+  const juneExchanges = exchanges.filter(e => eventDate(e).valueOf() >= JUNE_START.valueOf() && eventDate(e).valueOf() < MONTH_START.valueOf());
+  const historicalExchanges = exchanges.filter(e => eventDate(e).valueOf() < JUNE_START.valueOf());
 
   const searchResults = searchQuery.trim()
     ? exchanges.filter(e => {
@@ -71,6 +72,7 @@ export default function Exchanges() {
   }, {});
 
   const recentGrouped = groupByDay(recentExchanges);
+  const juneGrouped = groupByDay(juneExchanges);
   const historicalGrouped = groupByDay(historicalExchanges);
 
   const lastSession = exchanges[0];
@@ -154,12 +156,32 @@ export default function Exchanges() {
         )
       ) : (
         <>
-          {recentExchanges.length === 0 && historicalExchanges.length > 0 && (
+          {recentExchanges.length === 0 && juneExchanges.length === 0 && historicalExchanges.length > 0 && (
             <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">All exchanges are in the Historical section below</p>
+              <p className="text-sm text-muted-foreground">All exchanges are in the sections below</p>
             </div>
           )}
           {Object.entries(recentGrouped).map(([day, items]) => renderDaySection(day, items))}
+
+          {juneExchanges.length > 0 && (
+            <section>
+              <button
+                onClick={() => setShowJune(!showJune)}
+                className="flex items-center justify-between w-full p-4 rounded-2xl bg-secondary hover:bg-secondary/80 transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  {showJune ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <h3 className="text-sm font-semibold">June</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">{juneExchanges.length} entries</span>
+              </button>
+              {showJune && (
+                <div className="space-y-6 mt-3">
+                  {Object.entries(juneGrouped).map(([day, items]) => renderDaySection(day, items))}
+                </div>
+              )}
+            </section>
+          )}
 
           {historicalExchanges.length > 0 && (
             <section>
@@ -171,7 +193,7 @@ export default function Exchanges() {
                   {showHistorical ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                   <h3 className="text-sm font-semibold">Historical</h3>
                 </div>
-                <span className="text-xs text-muted-foreground">{historicalExchanges.length} entries · older than 30 days</span>
+                <span className="text-xs text-muted-foreground">{historicalExchanges.length} entries · before June</span>
               </button>
               {showHistorical && (
                 <div className="space-y-6 mt-3">
