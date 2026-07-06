@@ -1,32 +1,22 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Droplets, Trash2, AlertTriangle, Pencil } from "lucide-react";
+import { Plus, Droplets, Search, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import ExchangeForm from "@/components/exchanges/ExchangeForm";
+import ExchangeCard from "@/components/exchanges/ExchangeCard";
 import moment from "moment";
 
-const formatDwell = (hours) => {
-  if (!hours) return "—";
-  const h = Math.floor(hours);
-  const m = Math.round((hours - h) * 60);
-  return `${h}:${m.toString().padStart(2, "0")}`;
-};
-
-const appearanceColors = {
-  clear: "bg-emerald-100 text-emerald-700",
-  cloudy: "bg-red-100 text-red-700",
-  bloody: "bg-orange-100 text-orange-700",
-  fibrin: "bg-amber-100 text-amber-700",
-};
+const HISTORICAL_CUTOFF = moment("2026-07-01").endOf("day");
 
 export default function Exchanges() {
   const [exchanges, setExchanges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showHistorical, setShowHistorical] = useState(false);
 
   useEffect(() => { loadExchanges(); }, []);
 
@@ -53,46 +43,57 @@ export default function Exchanges() {
     loadExchanges();
   };
 
-  const periods = (() => {
-    if (exchanges.length === 0) return [];
-    const oldest = moment.utc(exchanges[exchanges.length - 1].created_date).local();
-    const result = [];
-    let end = moment();
-    let idx = 0;
-    while (end.isAfter(oldest)) {
-      const start = moment(end).subtract(30, "days");
-      result.push({
-        key: `p${idx}`,
-        label: idx === 0
-          ? `Last 30 days · ${start.format("MMM D")} – ${end.format("MMM D")}`
-          : `${start.format("MMM D, YYYY")} – ${end.format("MMM D, YYYY")}`,
-        start: start.valueOf(),
-        end: end.valueOf(),
-      });
-      end = start;
-      idx++;
-    }
-    return result;
-  })();
+  const isHistorical = (e) => moment.utc(e.created_date).local().valueOf() <= HISTORICAL_CUTOFF.valueOf();
 
-  const activePeriod = periods.find(p => p.key === selectedPeriod) || periods[0];
+  const recentExchanges = exchanges.filter(e => !isHistorical(e));
+  const historicalExchanges = exchanges.filter(e => isHistorical(e));
 
-  const periodExchanges = activePeriod
+  const searchResults = searchQuery.trim()
     ? exchanges.filter(e => {
-        const ts = moment.utc(e.created_date).local().valueOf();
-        return ts >= activePeriod.start && ts < activePeriod.end;
+        const q = searchQuery.toLowerCase();
+        return [
+          e.modality,
+          `${e.dextrose_concentration}% dextrose`,
+          e.solution_appearance,
+          e.notes,
+          moment.utc(e.created_date).local().format("MMM D, YYYY HH:mm"),
+        ].filter(Boolean).join(" ").toLowerCase().includes(q);
       })
-    : exchanges;
+    : null;
 
-  const grouped = periodExchanges.reduce((acc, e) => {
+  const groupByDay = (items) => items.reduce((acc, e) => {
     const day = moment.utc(e.created_date).local().format("YYYY-MM-DD");
     if (!acc[day]) acc[day] = [];
     acc[day].push(e);
     return acc;
   }, {});
 
+  const recentGrouped = groupByDay(recentExchanges);
+  const historicalGrouped = groupByDay(historicalExchanges);
+
   const lastSession = exchanges[0];
   const lastUF = lastSession?.ultrafiltration || 0;
+
+  const handleEdit = (e) => { setEditing(e); setShowForm(true); };
+
+  const renderDaySection = (day, items) => {
+    const dayUF = items.reduce((acc, e) => acc + (e.ultrafiltration || 0), 0);
+    return (
+      <section key={day}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-muted-foreground">
+            {moment(day).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "dddd", sameElse: "MMM D, YYYY" })}
+          </h3>
+          <span className="text-xs font-medium text-primary">UF: {dayUF > 0 ? "+" : ""}{dayUF} mL</span>
+        </div>
+        <div className="space-y-2">
+          {items.map(e => (
+            <ExchangeCard key={e.id} exchange={e} onEdit={handleEdit} onDelete={handleDelete} />
+          ))}
+        </div>
+      </section>
+    );
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-secondary border-t-primary rounded-full animate-spin" /></div>;
@@ -116,21 +117,15 @@ export default function Exchanges() {
         <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.created_date).local().format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
       </div>
 
-      {periods.length > 1 && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">Period:</span>
-          <Select value={selectedPeriod || periods[0]?.key} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="rounded-xl max-w-xs h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {periods.map(p => (
-                <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search exchanges by modality, appearance, notes, date..."
+          className="rounded-xl pl-9"
+        />
+      </div>
 
       {exchanges.length === 0 ? (
         <div className="text-center py-16">
@@ -140,71 +135,50 @@ export default function Exchanges() {
           <p className="text-muted-foreground">No exchanges logged yet</p>
           <Button onClick={() => { setEditing(null); setShowForm(true); }} className="mt-4 rounded-xl">Log your first exchange</Button>
         </div>
-      ) : periodExchanges.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-sm text-muted-foreground">No exchanges in this period</p>
-        </div>
+      ) : searchResults ? (
+        searchResults.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-sm text-muted-foreground">No exchanges match "{searchQuery}"</p>
+          </div>
+        ) : (
+          <section>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">{searchResults.length} result{searchResults.length !== 1 ? "s" : ""}</h3>
+            <div className="space-y-2">
+              {searchResults.map(e => (
+                <ExchangeCard key={e.id} exchange={e} onEdit={handleEdit} onDelete={handleDelete} />
+              ))}
+            </div>
+          </section>
+        )
       ) : (
-        Object.entries(grouped).map(([day, items]) => {
-          const dayUF = items.reduce((acc, e) => acc + (e.ultrafiltration || 0), 0);
-          return (
-            <section key={day}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-muted-foreground">
-                  {moment(day).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "dddd", sameElse: "MMM D, YYYY" })}
-                </h3>
-                <span className="text-xs font-medium text-primary">UF: {dayUF > 0 ? "+" : ""}{dayUF} mL</span>
-              </div>
-              <div className="space-y-2">
-                {items.map(e => (
-                  <div key={e.id} className="p-4 rounded-2xl bg-card border group">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <Droplets size={18} className="text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold uppercase">{e.modality}</p>
-                          <span className="text-xs text-muted-foreground">{e.dextrose_concentration}% dextrose</span>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${appearanceColors[e.solution_appearance] || "bg-secondary text-muted-foreground"}`}>
-                            {e.solution_appearance}
-                          </span>
-                          {e.solution_appearance === "cloudy" && <AlertTriangle size={13} className="text-destructive" />}
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 mt-2">
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">UF</p>
-                            <p className={`text-sm font-bold ${e.ultrafiltration >= 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                              {e.ultrafiltration > 0 ? "+" : ""}{e.ultrafiltration} mL
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">Dwell Time</p>
-                            <p className="text-sm font-medium">{formatDwell(e.dwell_hours)}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">Lost Dwell</p>
-                            <p className="text-sm font-medium">{e.lost_dwell ? `${e.lost_dwell} mL` : "—"}</p>
-                          </div>
-                        </div>
-                        {e.notes && <p className="text-xs text-muted-foreground mt-2 italic">{e.notes}</p>}
-                        <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(e.created_date).local().format("HH:mm")}</p>
-                      </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                        <button onClick={() => { setEditing(e); setShowForm(true); }} className="p-1.5 rounded-lg hover:bg-secondary transition-all">
-                          <Pencil size={14} className="text-muted-foreground" />
-                        </button>
-                        <button onClick={() => handleDelete(e.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-all">
-                          <Trash2 size={14} className="text-destructive" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        <>
+          {recentExchanges.length === 0 && historicalExchanges.length > 0 && (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">All exchanges are in the Historical section below</p>
+            </div>
+          )}
+          {Object.entries(recentGrouped).map(([day, items]) => renderDaySection(day, items))}
+
+          {historicalExchanges.length > 0 && (
+            <section>
+              <button
+                onClick={() => setShowHistorical(!showHistorical)}
+                className="flex items-center justify-between w-full p-4 rounded-2xl bg-secondary hover:bg-secondary/80 transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  {showHistorical ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <h3 className="text-sm font-semibold">Historical</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">{historicalExchanges.length} entries · on or before Jul 1</span>
+              </button>
+              {showHistorical && (
+                <div className="space-y-6 mt-3">
+                  {Object.entries(historicalGrouped).map(([day, items]) => renderDaySection(day, items))}
+                </div>
+              )}
             </section>
-          );
-        })
+          )}
+        </>
       )}
 
       <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setEditing(null); }}>
