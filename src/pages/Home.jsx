@@ -181,7 +181,9 @@ export default function Home() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold capitalize">{e.modality}</span>
                       <span className="text-xs text-muted-foreground">{e.dextrose_concentration}% dextrose</span>
-                      {isCloudy && <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">cloudy</span>}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${e.solution_appearance === "clear" ? "bg-emerald-100 text-emerald-700" : e.solution_appearance === "cloudy" ? "bg-red-100 text-red-700" : e.solution_appearance === "bloody" ? "bg-orange-100 text-orange-700" : "bg-amber-100 text-amber-700"}`}>
+                        {e.solution_appearance}
+                      </span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{moment.utc(e.created_date).local().format("MMM D · HH:mm")}</p>
                     {formatDwell(e.dwell_hours) && <p className="text-[10px] text-muted-foreground mt-0.5">Dwell: {formatDwell(e.dwell_hours)}</p>}
