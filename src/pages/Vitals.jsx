@@ -1,22 +1,26 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, HeartPulse, Trash2, Scale, Pencil } from "lucide-react";
+import { Plus, HeartPulse, ChevronDown, ChevronRight, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import VitalForm from "@/components/vitals/VitalForm";
+import VitalCard from "@/components/vitals/VitalCard";
 import moment from "moment";
+
+const HISTORICAL_CUTOFF = moment().subtract(30, "days").startOf("day");
 
 export default function Vitals() {
   const [vitals, setVitals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [showHistorical, setShowHistorical] = useState(false);
 
   useEffect(() => { loadVitals(); }, []);
 
   const loadVitals = async () => {
     setLoading(true);
-    const data = await base44.entities.VitalSign.list("-created_date", 100);
+    const data = await base44.entities.VitalSign.list("-created_date", 500);
     setVitals(data);
     setLoading(false);
   };
@@ -44,6 +48,47 @@ export default function Vitals() {
   const latest = vitals[0];
   const prev = vitals[1];
   const weightDelta = latest?.weight_lbs && prev?.weight_lbs ? (latest.weight_lbs - prev.weight_lbs) : 0;
+
+  const isHistorical = (v) => moment.utc(v.created_date).local().valueOf() < HISTORICAL_CUTOFF.valueOf();
+
+  const recentVitals = vitals.filter(v => !isHistorical(v));
+  const historicalVitals = vitals.filter(v => isHistorical(v));
+
+  const groupByDay = (items) => items.reduce((acc, v) => {
+    const day = moment.utc(v.created_date).local().format("YYYY-MM-DD");
+    if (!acc[day]) acc[day] = [];
+    acc[day].push(v);
+    return acc;
+  }, {});
+
+  const recentGrouped = groupByDay(recentVitals);
+  const historicalGrouped = groupByDay(historicalVitals);
+
+  const handleEdit = (v) => { setEditing(v); setShowForm(true); };
+
+  const renderDaySection = (day, items) => {
+    const weights = items.filter(i => i.weight_lbs).map(i => i.weight_lbs);
+    const dayDelta = weights.length >= 2 ? (weights[0] - weights[weights.length - 1]) : 0;
+    return (
+      <section key={day}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-muted-foreground">
+            {moment(day).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "dddd", sameElse: "MMM D, YYYY" })}
+          </h3>
+          {dayDelta !== 0 && (
+            <span className="text-xs font-medium text-primary">
+              {dayDelta > 0 ? "▲" : "▼"} {Math.abs(dayDelta).toFixed(1)} lbs
+            </span>
+          )}
+        </div>
+        <div className="space-y-2">
+          {items.map(v => (
+            <VitalCard key={v.id} vital={v} onEdit={handleEdit} onDelete={handleDelete} />
+          ))}
+        </div>
+      </section>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -97,31 +142,34 @@ export default function Vitals() {
           <Button onClick={() => { setEditing(null); setShowForm(true); }} className="mt-4 rounded-xl">Record your vitals</Button>
         </div>
       ) : (
-        <div className="space-y-2">
-          {vitals.map(v => (
-            <div key={v.id} className="flex items-center gap-3 p-4 rounded-2xl bg-card border group">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
-                <HeartPulse size={18} className="text-rose-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 flex-wrap">
-                  {v.weight_lbs && <span className="text-sm font-semibold">{v.weight_lbs} lbs</span>}
-                  {v.systolic_bp && <span className="text-sm font-semibold">{v.systolic_bp}/{v.diastolic_bp} mmHg</span>}
-                </div>
-                {v.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{v.notes}</p>}
-                <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(v.created_date).local().format("MMM D, YYYY · HH:mm")}</p>
-              </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <button onClick={() => { setEditing(v); setShowForm(true); }} className="p-1.5 rounded-lg hover:bg-secondary transition-all">
-                  <Pencil size={14} className="text-muted-foreground" />
-                </button>
-                <button onClick={() => handleDelete(v.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-all">
-                  <Trash2 size={14} className="text-destructive" />
-                </button>
-              </div>
+        <>
+          {recentVitals.length === 0 && historicalVitals.length > 0 && (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">All vitals are in the Historical section below</p>
             </div>
-          ))}
-        </div>
+          )}
+          {Object.entries(recentGrouped).map(([day, items]) => renderDaySection(day, items))}
+
+          {historicalVitals.length > 0 && (
+            <section>
+              <button
+                onClick={() => setShowHistorical(!showHistorical)}
+                className="flex items-center justify-between w-full p-4 rounded-2xl bg-secondary hover:bg-secondary/80 transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  {showHistorical ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <h3 className="text-sm font-semibold">Historical</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">{historicalVitals.length} entries · older than 30 days</span>
+              </button>
+              {showHistorical && (
+                <div className="space-y-6 mt-3">
+                  {Object.entries(historicalGrouped).map(([day, items]) => renderDaySection(day, items))}
+                </div>
+              )}
+            </section>
+          )}
+        </>
       )}
 
       <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setEditing(null); }}>
