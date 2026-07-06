@@ -73,7 +73,7 @@ export default function Exchanges() {
       <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5">
         <p className="text-xs font-semibold text-primary uppercase tracking-wider">Last Session UF</p>
         <p className="text-3xl font-bold text-primary mt-1">{lastUF > 0 ? "+" : ""}{lastUF} <span className="text-lg font-medium">mL</span></p>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.created_date).local().format("MMM D, h:mm A")}` : "No sessions logged yet"}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.created_date).local().format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
       </div>
 
       {exchanges.length === 0 ? (
@@ -129,7 +129,7 @@ export default function Exchanges() {
                         </div>
                         {e.dwell_hours && <p className="text-xs text-muted-foreground mt-1">Dwell: {e.dwell_hours} hrs</p>}
                         {e.notes && <p className="text-xs text-muted-foreground mt-1 italic">{e.notes}</p>}
-                        <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(e.created_date).local().format("h:mm A")}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(e.created_date).local().format("HH:mm")}</p>
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                         <button onClick={() => { setEditing(e); setShowForm(true); }} className="p-1.5 rounded-lg hover:bg-secondary transition-all">

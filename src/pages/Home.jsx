@@ -137,7 +137,7 @@ export default function Home() {
           </div>
           <Droplets size={32} className="text-primary/30" />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.created_date).local().format("h:mm A")}` : "No sessions logged yet"}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.created_date).local().format("HH:mm")}` : "No sessions logged yet"}</p>
       </div>
 
       {/* Latest vitals */}
@@ -160,7 +160,7 @@ export default function Home() {
             </div>
             <div className="bg-card rounded-2xl border p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Logged</p>
-              <p className="text-lg font-bold mt-1">{moment.utc(latestVital.created_date).local().format("h A")}</p>
+              <p className="text-lg font-bold mt-1">{moment.utc(latestVital.created_date).local().format("HH:mm")}</p>
               <p className="text-[10px] text-muted-foreground">{moment.utc(latestVital.created_date).local().format("MMM D")}</p>
             </div>
           </div>
@@ -189,7 +189,7 @@ export default function Home() {
                       <span className="text-xs text-muted-foreground">{e.dextrose_concentration}% dextrose</span>
                       {isCloudy && <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">cloudy</span>}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{moment.utc(e.created_date).local().format("MMM D · h:mm A")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{moment.utc(e.created_date).local().format("MMM D · HH:mm")}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`text-sm font-bold ${uf > 0 ? "text-emerald-600" : uf < 0 ? "text-amber-600" : "text-muted-foreground"}`}>
@@ -218,7 +218,7 @@ export default function Home() {
                 <div key={s.id} className="shrink-0 p-3 rounded-2xl bg-card border min-w-[120px]">
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mb-1.5 ${severityColors[s.severity]}`}>{s.severity}/5</span>
                   <p className="text-sm font-medium capitalize">{s.symptom_type.replace(/_/g, " ")}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{moment.utc(s.created_date).local().format("h:mm A")}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{moment.utc(s.created_date).local().format("HH:mm")}</p>
                 </div>
               );
             })}
@@ -235,7 +235,7 @@ export default function Home() {
           <div className="bg-card rounded-2xl border p-4">
             {journal[0].title && <p className="text-sm font-semibold mb-1">{journal[0].title}</p>}
             <p className="text-sm text-muted-foreground line-clamp-2">{journal[0].content}</p>
-            <p className="text-xs text-muted-foreground mt-2">{moment.utc(journal[0].created_date).local().format("h:mm A")}</p>
+            <p className="text-xs text-muted-foreground mt-2">{moment.utc(journal[0].created_date).local().format("HH:mm")}</p>
           </div>
         </section>
       )}
