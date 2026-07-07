@@ -24,7 +24,7 @@ const symptomTypes = [
 export default function SymptomForm({ onSubmit, onCancel, initial }) {
   const [form, setForm] = useState({
     symptom_type: initial?.symptom_type || "",
-    severity: initial?.severity ?? 3,
+    severity: initial?.severity ?? null,
     notes: initial?.notes || "",
   });
   const [saving, setSaving] = useState(false);
@@ -61,7 +61,7 @@ export default function SymptomForm({ onSubmit, onCancel, initial }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">How severe? <span className="text-muted-foreground font-normal">— {severityLabels[form.severity]}</span></label>
+        <label className="block text-sm font-medium mb-2">How are you feeling about it? {!form.severity && <span className="text-muted-foreground font-normal">— pick one</span>}</label>
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map(n => (
             <button
@@ -91,7 +91,7 @@ export default function SymptomForm({ onSubmit, onCancel, initial }) {
 
       <div className="flex gap-3 pt-2">
         {onCancel && <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-xl">Cancel</Button>}
-        <Button type="submit" disabled={!form.symptom_type || saving} className="flex-1 rounded-xl h-12 text-base">
+        <Button type="submit"           disabled={!form.symptom_type || !form.severity || saving} className="flex-1 rounded-xl h-12 text-base">
           {saving ? "Saving..." : (initial ? "Update" : "Log Symptom")}
         </Button>
       </div>
