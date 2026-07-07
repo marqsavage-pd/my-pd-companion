@@ -91,13 +91,12 @@ export default function Symptoms() {
                 const isExitSite = s.symptom_type.startsWith("exit_site");
                 return (
                   <div key={s.id} className={`flex items-start gap-3 p-4 rounded-2xl border group ${isExitSite && s.severity >= 3 ? "bg-destructive/5 border-destructive/20" : "bg-card"}`}>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${severityColors[s.severity]}`}>
-                      {s.severity}
+                    <div className={`px-3 h-10 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${severityColors[s.severity]}`}>
+                      {severityLabels[s.severity]}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold">{symptomLabels[s.symptom_type] || s.symptom_type}</p>
-                        <span className="text-xs text-muted-foreground">{severityLabels[s.severity]}</span>
                         {isExitSite && s.severity >= 3 && <AlertTriangle size={13} className="text-destructive" />}
                       </div>
                       {s.notes && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.notes}</p>}
