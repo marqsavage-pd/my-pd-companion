@@ -56,7 +56,10 @@ export default function Home() {
   };
 
 
-  const totalUF = exchanges.reduce((sum, e) => sum + (e.ultrafiltration || 0), 0);
+  const hasToday = exchanges.length > 0;
+  const totalUF = hasToday
+    ? exchanges.reduce((sum, e) => sum + (e.ultrafiltration || 0), 0)
+    : (recentExchanges[0]?.ultrafiltration || 0);
   const lastSession = exchanges[0] || recentExchanges[0];
   const latestVital = vitals[0];
   const hasCloudy = exchanges.some(e => e.solution_appearance === "cloudy");
@@ -131,7 +134,7 @@ export default function Home() {
           </div>
           <Droplets size={32} className="text-primary/30" />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.logged_at || lastSession.created_date).local().format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `${hasToday ? `${exchanges.length} session${exchanges.length !== 1 ? "s" : ""} today` : "Most recent session"} · ${moment.utc(lastSession.logged_at || lastSession.created_date).local().format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
       </div>
 
       {/* Latest vitals */}
