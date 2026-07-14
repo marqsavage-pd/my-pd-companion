@@ -71,6 +71,16 @@ export default function Home() {
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
+  // logged_at may be stored as a date-only string (e.g. "2026-07-13"); parsing it
+  // as UTC midnight then shifting to local shifts the date back a day, so treat
+  // date-only values as local. Full datetime strings keep UTC->local conversion.
+  const formatSessionTime = (e, sep = ", ") => {
+    const ts = e.logged_at || e.created_date;
+    if (!ts) return "—";
+    if (ts.length <= 10) return moment(ts).format("MMM D");
+    return moment.utc(ts).local().format(`MMM D${sep}HH:mm`);
+  };
+
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -134,7 +144,7 @@ export default function Home() {
           </div>
           <Droplets size={32} className="text-primary/30" />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `${hasToday ? `${exchanges.length} session${exchanges.length !== 1 ? "s" : ""} today` : "Most recent session"} · ${moment.utc(lastSession.logged_at || lastSession.created_date).local().format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `${hasToday ? `${exchanges.length} session${exchanges.length !== 1 ? "s" : ""} today` : "Most recent session"} · ${formatSessionTime(lastSession)}` : "No sessions logged yet"}</p>
       </div>
 
       {/* Latest vitals */}
@@ -188,7 +198,7 @@ export default function Home() {
                         {e.solution_appearance}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{moment.utc(e.logged_at || e.created_date).local().format("MMM D · HH:mm")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{formatSessionTime(e, " · ")}</p>
                     {formatDwell(e.dwell_hours) && <p className="text-[10px] text-muted-foreground mt-0.5">Dwell: {formatDwell(e.dwell_hours)}</p>}
                   </div>
                   <div className="text-right shrink-0">
