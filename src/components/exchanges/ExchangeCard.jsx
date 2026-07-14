@@ -1,7 +1,11 @@
 import { Droplets, AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import moment from "moment";
 
-const eventDate = (e) => moment.utc(e.logged_at || e.created_date).local();
+const eventDate = (e) => {
+  const ts = e.logged_at || e.created_date;
+  if (!ts) return moment();
+  return ts.length <= 10 ? moment(ts) : moment.utc(ts).local();
+};
 
 const formatDwell = (hours) => {
   if (!hours) return "—";

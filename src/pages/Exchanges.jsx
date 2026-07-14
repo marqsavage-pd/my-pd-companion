@@ -11,7 +11,11 @@ import moment from "moment";
 const MONTH_START = moment().startOf("month");
 const JUNE_START = moment().subtract(1, "month").startOf("month");
 const prevMonthLabel = moment().subtract(1, "month").format("MMMM");
-const eventDate = (e) => moment.utc(e.logged_at || e.created_date).local();
+const eventDate = (e) => {
+  const ts = e.logged_at || e.created_date;
+  if (!ts) return moment();
+  return ts.length <= 10 ? moment(ts) : moment.utc(ts).local();
+};
 
 export default function Exchanges() {
   const [exchanges, setExchanges] = useState([]);
