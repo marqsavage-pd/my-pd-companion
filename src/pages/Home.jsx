@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Droplets, HeartPulse, Activity, BookOpen, Plus, ArrowRight, AlertTriangle } from "lucide-react";
+import { Droplets, HeartPulse, Activity, BookOpen, Plus, ArrowRight, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ExchangeForm from "@/components/exchanges/ExchangeForm";
@@ -28,8 +28,8 @@ export default function Home() {
     setLoading(true);
     const [u, ex, re, v, s, j] = await Promise.all([
       base44.auth.me(),
-      base44.entities.Exchange.filter({ created_date: { $gte: todayStart } }, "-created_date", 20),
-      base44.entities.Exchange.list("-created_date", 5),
+      base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
+      base44.entities.Exchange.list("-logged_at", 3),
       base44.entities.VitalSign.list("-created_date", 5),
       base44.entities.Symptom.filter({ created_date: { $gte: todayStart } }, "-created_date", 10),
       base44.entities.JournalEntry.filter({ created_date: { $gte: todayStart } }, "-created_date", 5),
@@ -56,8 +56,8 @@ export default function Home() {
   };
 
 
-  const lastSession = recentExchanges[0];
-  const totalUF = lastSession?.ultrafiltration || 0;
+  const totalUF = exchanges.reduce((sum, e) => sum + (e.ultrafiltration || 0), 0);
+  const lastSession = exchanges[0] || recentExchanges[0];
   const latestVital = vitals[0];
   const hasCloudy = exchanges.some(e => e.solution_appearance === "cloudy");
 
@@ -131,7 +131,7 @@ export default function Home() {
           </div>
           <Droplets size={32} className="text-primary/30" />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.created_date).local().format("HH:mm")}` : "No sessions logged yet"}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${moment.utc(lastSession.logged_at || lastSession.created_date).local().format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
       </div>
 
       {/* Latest vitals */}
@@ -185,7 +185,7 @@ export default function Home() {
                         {e.solution_appearance}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{moment.utc(e.created_date).local().format("MMM D · HH:mm")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{moment.utc(e.logged_at || e.created_date).local().format("MMM D · HH:mm")}</p>
                     {formatDwell(e.dwell_hours) && <p className="text-[10px] text-muted-foreground mt-0.5">Dwell: {formatDwell(e.dwell_hours)}</p>}
                   </div>
                   <div className="text-right shrink-0">
@@ -236,6 +236,29 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Order supplies */}
+      <section>
+        <h2 className="font-heading text-lg font-semibold mb-3">Order Supplies</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <a href="https://www.pdempowers.com/patient/patient-portal" target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-between p-4 rounded-2xl bg-card border hover:shadow-md transition-all">
+            <div>
+              <p className="text-sm font-semibold">Vantive</p>
+              <p className="text-xs text-muted-foreground">PD supply portal</p>
+            </div>
+            <ExternalLink size={16} className="text-muted-foreground" />
+          </a>
+          <a href="https://wellview.welldyne.com" target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-between p-4 rounded-2xl bg-card border hover:shadow-md transition-all">
+            <div>
+              <p className="text-sm font-semibold">WellDyne</p>
+              <p className="text-xs text-muted-foreground">Pharmacy refills</p>
+            </div>
+            <ExternalLink size={16} className="text-muted-foreground" />
+          </a>
+        </div>
+      </section>
 
       <Dialog open={showExchangeForm} onOpenChange={setShowExchangeForm}>
         <DialogContent className="rounded-2xl max-w-md max-h-[90vh] overflow-y-auto">
