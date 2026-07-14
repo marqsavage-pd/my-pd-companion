@@ -241,7 +241,7 @@ export default function Home() {
       <section>
         <h2 className="font-heading text-lg font-semibold mb-3">Order Supplies</h2>
         <div className="grid grid-cols-2 gap-3">
-          <a href="https://www.pdempowers.com/patient/patient-portal" target="_blank" rel="noopener noreferrer"
+          <a href="https://account.vantive.com" target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-between p-4 rounded-2xl bg-card border hover:shadow-md transition-all">
             <div>
               <p className="text-sm font-semibold">Vantive</p>
@@ -249,7 +249,7 @@ export default function Home() {
             </div>
             <ExternalLink size={16} className="text-muted-foreground" />
           </a>
-          <a href="https://wellview.welldyne.com" target="_blank" rel="noopener noreferrer"
+          <a href="https://davita.welldyne.com" target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-between p-4 rounded-2xl bg-card border hover:shadow-md transition-all">
             <div>
               <p className="text-sm font-semibold">WellDyne</p>
