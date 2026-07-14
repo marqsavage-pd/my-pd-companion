@@ -133,13 +133,13 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1.5">Lost Dwell (mL) <span className="text-muted-foreground font-normal">(optional)</span></label>
+        <label className="block text-sm font-medium mb-1.5">Lost Dwell (minutes) <span className="text-muted-foreground font-normal">(optional)</span></label>
         <Input
           type="number"
-          step="50"
+          step="5"
           value={form.lost_dwell}
           onChange={e => setForm({ ...form, lost_dwell: e.target.value })}
-          placeholder="e.g. 150"
+          placeholder="e.g. 30"
           className="rounded-xl"
         />
       </div>
