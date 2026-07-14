@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertTriangle } from "lucide-react";
+import moment from "moment";
 
 export default function ExchangeForm({ onSubmit, onCancel, initial }) {
   const [form, setForm] = useState({
@@ -14,6 +15,9 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
     lost_dwell: initial?.lost_dwell ?? "",
     solution_appearance: initial?.solution_appearance || "clear",
     notes: initial?.notes || "",
+    logged_at: initial?.logged_at
+      ? moment(initial.logged_at).format("YYYY-MM-DDTHH:mm")
+      : moment().format("YYYY-MM-DDTHH:mm"),
   });
   const [saving, setSaving] = useState(false);
 
@@ -31,7 +35,7 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
       ultrafiltration: uf,
       dwell_hours: form.dwell_hours ? parseFloat(form.dwell_hours) : null,
       lost_dwell: form.lost_dwell ? parseFloat(form.lost_dwell) : null,
-      logged_at: initial?.logged_at || new Date().toISOString(),
+      logged_at: new Date(form.logged_at).toISOString(),
     });
     setSaving(false);
   };
@@ -46,6 +50,16 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <label className="block text-sm font-medium mb-1.5">Session Time</label>
+        <Input
+          type="datetime-local"
+          value={form.logged_at}
+          onChange={e => setForm({ ...form, logged_at: e.target.value })}
+          className="rounded-xl"
+        />
+      </div>
+
       <div>
         <label className="block text-sm font-medium mb-2">Modality</label>
         <div className="flex gap-2">
