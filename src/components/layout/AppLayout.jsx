@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Home, Droplets, HeartPulse, Activity, TrendingUp, BookOpen, Package, Plane, Menu, X, LogOut, Sun, Moon, Monitor } from "lucide-react";
+import { Home, Droplets, HeartPulse, Activity, TrendingUp, BookOpen, Package, Plane, StickyNote, Menu, X, LogOut, Sun, Moon, Monitor } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
@@ -11,6 +11,7 @@ const navItems = [
   { path: "/symptoms", label: "Symptoms", icon: Activity },
   { path: "/trends", label: "Trends", icon: TrendingUp },
   { path: "/journal", label: "Journal", icon: BookOpen },
+  { path: "/notes", label: "Notes", icon: StickyNote },
   { path: "/inventory", label: "Inventory", icon: Package },
   { path: "/travel", label: "Travel", icon: Plane },
 ];
