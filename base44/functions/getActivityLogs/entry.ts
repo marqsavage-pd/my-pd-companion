@@ -8,7 +8,10 @@ Deno.serve(async (req) => {
     if (!expectedKey || api_key !== expectedKey) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const logs = await base44.asServiceRole.entities.ActivityLog.list('-created_date', 100);
+    // Scope to the integration's own channel (source: 'nova') so the endpoint
+    // returns only device-imported logs it created — not other users' in-app
+    // (pd_companion) activity records, which would bypass per-user RLS.
+    const logs = await base44.asServiceRole.entities.ActivityLog.filter({ source: 'nova' }, '-created_date', 100);
     return Response.json({ logs: logs.map(l => ({
       id: l.id, title: l.title, description: l.description,
       type: l.type, created_date: l.created_date
