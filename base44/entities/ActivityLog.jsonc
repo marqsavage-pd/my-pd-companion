@@ -29,6 +29,10 @@
     "external_id": {
       "type": "string"
     },
+    "owner_id": {
+      "type": "string",
+      "description": "The user id this imported log belongs to; used to scope cross-user reads"
+    },
     "log_date": {
       "type": "string",
       "format": "date-time"
