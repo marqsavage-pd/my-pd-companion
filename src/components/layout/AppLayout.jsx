@@ -84,7 +84,7 @@ export default function AppLayout() {
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t z-40">
         <div className="flex justify-around py-2">
-          {navItems.slice(0, 5).map(item => (
+          {navItems.filter(i => ["/", "/exchanges", "/vitals", "/symptoms", "/notes"].includes(i.path)).map(item => (
             <Link key={item.path} to={item.path}
               className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg text-[10px] font-medium transition-colors ${location.pathname === item.path ? "text-primary" : "text-muted-foreground"}`}>
               <item.icon size={20} />{item.label}
