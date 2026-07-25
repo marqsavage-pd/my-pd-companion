@@ -124,6 +124,31 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium mb-1.5">Dwell Time (hrs) <span className="text-muted-foreground font-normal">(optional)</span></label>
+          <Input
+            type="number"
+            step="0.5"
+            value={form.dwell_hours}
+            onChange={e => setForm({ ...form, dwell_hours: e.target.value })}
+            placeholder="e.g. 4"
+            className="rounded-xl"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5">Lost Dwell (min) <span className="text-muted-foreground font-normal">(optional)</span></label>
+          <Input
+            type="number"
+            step="5"
+            value={form.lost_dwell}
+            onChange={e => setForm({ ...form, lost_dwell: e.target.value })}
+            placeholder="e.g. 30"
+            className="rounded-xl"
+          />
+        </div>
+      </div>
+
       {/* UF display */}
       <div className={`rounded-xl p-4 ${uf > 0 ? "bg-emerald-50 border border-emerald-200" : uf < 0 ? "bg-amber-50 border border-amber-200" : "bg-secondary"}`}>
         <div className="flex items-center justify-between">
@@ -132,30 +157,6 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
             {uf > 0 ? "+" : ""}{uf} mL
           </span>
         </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1.5">Dwell Time (hours) <span className="text-muted-foreground font-normal">(optional)</span></label>
-        <Input
-          type="number"
-          step="0.5"
-          value={form.dwell_hours}
-          onChange={e => setForm({ ...form, dwell_hours: e.target.value })}
-          placeholder="e.g. 4"
-          className="rounded-xl"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1.5">Lost Dwell (minutes) <span className="text-muted-foreground font-normal">(optional)</span></label>
-        <Input
-          type="number"
-          step="5"
-          value={form.lost_dwell}
-          onChange={e => setForm({ ...form, lost_dwell: e.target.value })}
-          placeholder="e.g. 30"
-          className="rounded-xl"
-        />
       </div>
 
       <div>
