@@ -51,7 +51,7 @@ export default function ExchangeCard({ exchange, onEdit, onDelete }) {
             </div>
             <div>
               <p className="text-[10px] text-muted-foreground uppercase">Lost Dwell</p>
-              <p className="text-sm font-medium">{e.lost_dwell ? `${e.lost_dwell} min` : "—"}</p>
+              <p className="text-sm font-medium">{e.lost_dwell ? `${e.lost_dwell} min` : "0 min"}</p>
             </div>
           </div>
           {e.notes && <p className="text-xs text-muted-foreground mt-2 italic">{e.notes}</p>}
