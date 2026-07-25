@@ -119,7 +119,7 @@ export default function Exchanges() {
           <div className="flex items-center gap-3 text-xs font-medium">
             <span className="text-primary">UF: {dayUF > 0 ? "+" : ""}{dayUF} mL</span>
             <span className="text-muted-foreground">Avg Dwell: {formatDwell(dayAvgDwell)}</span>
-            <span className="text-muted-foreground">Lost Dwell: {dayLostDwell != null ? `${Math.round(dayLostDwell)} min` : "—"}</span>
+            <span className="text-muted-foreground">Lost Dwell: {dayLostDwell != null ? `${Math.round(dayLostDwell)} min` : "0 min"}</span>
           </div>
         </div>
         <div className="space-y-2">
@@ -158,7 +158,7 @@ export default function Exchanges() {
           </div>
           <div>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Lost Dwell</p>
-            <p className="text-lg font-bold text-primary">{recentAvgLost != null ? `${Math.round(recentAvgLost)} min` : "—"}</p>
+            <p className="text-lg font-bold text-primary">{recentAvgLost != null ? `${Math.round(recentAvgLost)} min` : "0 min"}</p>
           </div>
         </div>
       </div>
