@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine } from "recharts";
+import { AlertTriangle, TrendingUp, Activity } from "lucide-react";
 import moment from "moment";
 
 const symptomLabels = {
@@ -21,7 +22,7 @@ export default function Trends() {
 
   const loadData = async () => {
     setLoading(true);
-    const since = moment().subtract(range, "days").startOf("day").toISOString();
+    const since = moment().subtract(range * 2, "days").startOf("day").toISOString();
     const [ex, v, s] = await Promise.all([
       base44.entities.Exchange.filter({ logged_at: { $gte: since } }, "-logged_at", 500),
       base44.entities.VitalSign.filter({ measured_at: { $gte: since } }, "-measured_at", 500),
@@ -79,6 +80,52 @@ export default function Trends() {
       .map(([type, count]) => ({ type, label: symptomLabels[type] || type, count }));
   };
 
+  // Compare the selected window against the preceding equal-length window to
+  // surface meaningful deviations (Smart Summary).
+  const buildInsights = () => {
+    const curStart = moment().subtract(range, "days").startOf("day");
+    const prevStart = moment().subtract(range * 2, "days").startOf("day");
+    const inWin = (ts, start, end) => {
+      const d = moment.utc(ts).local().valueOf();
+      return d >= start.valueOf() && d < end.valueOf();
+    };
+    const now = moment();
+    const curEx = exchanges.filter(e => inWin(e.logged_at || e.created_date, curStart, now));
+    const prevEx = exchanges.filter(e => inWin(e.logged_at || e.created_date, prevStart, curStart));
+    const curV = vitals.filter(v => inWin(v.measured_at || v.created_date, curStart, now));
+    const prevV = vitals.filter(v => inWin(v.measured_at || v.created_date, prevStart, curStart));
+    const curS = symptoms.filter(s => inWin(s.logged_at || s.created_date, curStart, now));
+    const prevS = symptoms.filter(s => inWin(s.logged_at || s.created_date, prevStart, curStart));
+
+    const ufCur = curEx.reduce((a, e) => a + (e.ultrafiltration || 0), 0);
+    const ufPrev = prevEx.reduce((a, e) => a + (e.ultrafiltration || 0), 0);
+    const avgW = (arr) => arr.length ? arr.reduce((a, v) => a + v.weight_lbs, 0) / arr.length : null;
+    const avgSys = (arr) => arr.length ? arr.reduce((a, v) => a + v.systolic_bp, 0) / arr.length : null;
+    const wc = avgW(curV.filter(v => v.weight_lbs));
+    const wp = avgW(prevV.filter(v => v.weight_lbs));
+    const sc = avgSys(curV.filter(v => v.systolic_bp));
+    const sp = avgSys(prevV.filter(v => v.systolic_bp));
+
+    const out = [];
+    if (ufPrev > 0) {
+      const pct = ((ufCur - ufPrev) / ufPrev) * 100;
+      if (Math.abs(pct) >= 15) out.push({ label: "Ultrafiltration", tone: pct < 0 ? "warning" : "good", detail: `${pct < 0 ? "Down" : "Up"} ${Math.abs(Math.round(pct))}% vs the previous ${range} days` });
+    }
+    if (wc != null && wp != null) {
+      const diff = wc - wp;
+      if (Math.abs(diff) >= 2) out.push({ label: "Weight", tone: "warning", detail: `${diff > 0 ? "Up" : "Down"} ${Math.abs(diff).toFixed(1)} lbs average` });
+    }
+    if (sc != null && sp != null) {
+      const diff = sc - sp;
+      if (Math.abs(diff) >= 5) out.push({ label: "Blood pressure", tone: diff > 0 ? "warning" : "good", detail: `${diff > 0 ? "Up" : "Down"} ${Math.abs(Math.round(diff))} mmHg avg systolic` });
+    }
+    if (prevS.length > 0) {
+      const diff = curS.length - prevS.length;
+      if (Math.abs(diff) >= 2) out.push({ label: "Symptoms", tone: diff > 0 ? "warning" : "good", detail: `${diff > 0 ? "Up" : "Down"} ${Math.abs(diff)} entries vs the previous ${range} days` });
+    }
+    return out;
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-secondary border-t-primary rounded-full animate-spin" /></div>;
   }
@@ -98,6 +145,39 @@ export default function Trends() {
           </button>
         ))}
       </div>
+
+      {/* Smart Summary */}
+      {(() => {
+        const insights = buildInsights();
+        const hasData = exchanges.length > 0 || vitals.length > 0 || symptoms.length > 0;
+        if (insights.length === 0 && !hasData) return null;
+        return (
+          <section className="space-y-2">
+            <h3 className="font-heading text-base font-semibold flex items-center gap-2"><Activity size={16} /> Smart Summary</h3>
+            {insights.length === 0 ? (
+              <div className="flex items-center gap-3 p-4 rounded-2xl border bg-emerald-50 border-emerald-200">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-emerald-100">
+                  <TrendingUp size={16} className="text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-emerald-800">Your numbers look stable</p>
+                  <p className="text-xs text-emerald-700/80">No significant changes vs the previous {range} days.</p>
+                </div>
+              </div>
+            ) : insights.map((ins, i) => (
+              <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border ${ins.tone === "warning" ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-200"}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${ins.tone === "warning" ? "bg-amber-100" : "bg-emerald-100"}`}>
+                  {ins.tone === "warning" ? <AlertTriangle size={16} className="text-amber-600" /> : <TrendingUp size={16} className="text-emerald-600" />}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{ins.label}</p>
+                  <p className="text-xs text-muted-foreground">{ins.detail}</p>
+                </div>
+              </div>
+            ))}
+          </section>
+        );
+      })()}
 
       {/* UF chart */}
       <section className="bg-card rounded-2xl border p-5">

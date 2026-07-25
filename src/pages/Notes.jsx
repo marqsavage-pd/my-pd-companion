@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { StickyNote, Plus, Check, Trash2, MessageCircleQuestion, Package } from "lucide-react";
+import { StickyNote, Plus, Check, Trash2, MessageCircleQuestion, Package, Flag, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { generateClinicReport } from "@/lib/clinicReport";
 import moment from "moment";
 
 export default function Notes() {
@@ -11,13 +12,19 @@ export default function Notes() {
   const [text, setText] = useState("");
   const [category, setCategory] = useState("question");
   const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState(null);
+  const [reporting, setReporting] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     setLoading(true);
-    const data = await base44.entities.AppointmentNote.list("-created_date", 500);
+    const [data, u] = await Promise.all([
+      base44.entities.AppointmentNote.list("-created_date", 500),
+      base44.auth.me(),
+    ]);
     setNotes(data);
+    setUser(u);
     setLoading(false);
   };
 
@@ -41,6 +48,20 @@ export default function Notes() {
     load();
   };
 
+  const toggleFlag = async (n) => {
+    await base44.entities.AppointmentNote.update(n.id, { flag_for_review: !n.flag_for_review });
+    load();
+  };
+
+  const handleReport = async () => {
+    setReporting(true);
+    try {
+      await generateClinicReport(user);
+    } finally {
+      setReporting(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-secondary border-t-primary rounded-full animate-spin" /></div>;
   }
@@ -59,6 +80,9 @@ export default function Notes() {
         <p className={`text-sm ${n.resolved ? "text-muted-foreground line-through" : "text-foreground"}`}>{n.text}</p>
         <p className="text-[10px] text-muted-foreground mt-1">{moment.utc(n.created_date).local().format("MMM D")}</p>
       </div>
+      <button onClick={() => toggleFlag(n)} title={n.flag_for_review ? "Remove clinic flag" : "Flag for clinic report"} className={`p-1.5 rounded-lg transition-all shrink-0 ${n.flag_for_review ? "text-primary opacity-100" : "text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-primary"}`}>
+        <Flag size={14} className={n.flag_for_review ? "fill-primary" : ""} />
+      </button>
       <button onClick={() => remove(n.id)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-destructive/10 transition-all shrink-0">
         <Trash2 size={14} className="text-muted-foreground" />
       </button>
@@ -67,10 +91,16 @@ export default function Notes() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-bold flex items-center gap-2"><StickyNote size={24} /> Notes</h1>
-        <p className="text-sm text-muted-foreground mt-1">Things to ask about at your next appointment</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-bold flex items-center gap-2"><StickyNote size={24} /> Notes</h1>
+          <p className="text-sm text-muted-foreground mt-1">Things to ask about at your next appointment</p>
+        </div>
+        <Button onClick={handleReport} disabled={reporting} variant="outline" className="rounded-xl gap-2 shrink-0">
+          <FileText size={16} /> {reporting ? "Generating..." : "Clinical Report"}
+        </Button>
       </div>
+      <p className="text-xs text-muted-foreground -mt-3">Flag items with the flag icon to include them in the report.</p>
 
       <form onSubmit={add} className="bg-card border rounded-2xl p-4 space-y-3">
         <Input value={text} onChange={e => setText(e.target.value)} placeholder="Add a question or supply to request..." className="rounded-xl" />

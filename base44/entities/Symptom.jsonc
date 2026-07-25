@@ -31,6 +31,10 @@
     "notes": {
       "type": "string"
     },
+    "associated_exchange_id": {
+      "type": "string",
+      "description": "Optional id of the exchange this symptom occurred during, for correlation"
+    },
     "logged_at": {
       "type": "string",
       "format": "date-time"

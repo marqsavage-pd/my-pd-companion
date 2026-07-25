@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AlertTriangle } from "lucide-react";
+import moment from "moment";
 
 const symptomTypes = [
   { value: "nausea", label: "Nausea" },
@@ -21,19 +23,26 @@ const symptomTypes = [
   { value: "other", label: "Other" },
 ];
 
-export default function SymptomForm({ onSubmit, onCancel, initial }) {
+export default function SymptomForm({ onSubmit, onCancel, initial, recentExchanges = [] }) {
   const [form, setForm] = useState({
     symptom_type: initial?.symptom_type || "",
     severity: initial?.severity ?? null,
     notes: initial?.notes || "",
+    associated_exchange_id: initial?.associated_exchange_id || "",
   });
   const [saving, setSaving] = useState(false);
+
+  const isHighSeverity = form.severity >= 4;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.symptom_type) return;
     setSaving(true);
-    await onSubmit({ ...form, logged_at: initial?.logged_at || new Date().toISOString() });
+    await onSubmit({
+      ...form,
+      associated_exchange_id: form.associated_exchange_id || null,
+      logged_at: initial?.logged_at || new Date().toISOString(),
+    });
     setSaving(false);
   };
 
@@ -78,6 +87,29 @@ export default function SymptomForm({ onSubmit, onCancel, initial }) {
         </div>
       </div>
 
+      {/* Context-aware correlation prompt for high-severity symptoms */}
+      {isHighSeverity && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+          <div className="flex items-center gap-2 text-amber-800">
+            <AlertTriangle size={15} />
+            <p className="text-sm font-semibold">Help your clinic connect the dots</p>
+          </div>
+          <p className="text-xs text-amber-700/90">Was this symptom during or right after an exchange? Linking it helps spot patterns.</p>
+          <select
+            value={form.associated_exchange_id}
+            onChange={e => setForm({ ...form, associated_exchange_id: e.target.value })}
+            className="w-full rounded-xl border border-amber-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+          >
+            <option value="">Not during an exchange</option>
+            {recentExchanges.map(ex => (
+              <option key={ex.id} value={ex.id}>
+                {moment.utc(ex.logged_at || ex.created_date).local().format("MMM D, HH:mm")} · {ex.modality?.toUpperCase()} · {ex.dextrose_concentration}% · UF {ex.ultrafiltration || 0} mL
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div>
         <label className="block text-sm font-medium mb-2">Notes <span className="text-muted-foreground font-normal">(optional)</span></label>
         <Textarea
@@ -91,7 +123,7 @@ export default function SymptomForm({ onSubmit, onCancel, initial }) {
 
       <div className="flex gap-3 pt-2">
         {onCancel && <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-xl">Cancel</Button>}
-        <Button type="submit"           disabled={!form.symptom_type || !form.severity || saving} className="flex-1 rounded-xl h-12 text-base">
+        <Button type="submit" disabled={!form.symptom_type || !form.severity || saving} className="flex-1 rounded-xl h-12 text-base">
           {saving ? "Saving..." : (initial ? "Update" : "Log Symptom")}
         </Button>
       </div>

@@ -32,14 +32,20 @@ export default function Symptoms() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showHistorical, setShowHistorical] = useState(false);
   const [showPrevMonth, setShowPrevMonth] = useState(false);
+  const [recentExchanges, setRecentExchanges] = useState([]);
 
   useEffect(() => { loadSymptoms(); }, []);
 
   const loadSymptoms = async () => {
     setLoading(true);
-    const data = await base44.entities.Symptom.list("-created_date", 500);
+    const since = moment().subtract(48, "hours").toISOString();
+    const [data, recent] = await Promise.all([
+      base44.entities.Symptom.list("-created_date", 500),
+      base44.entities.Exchange.filter({ logged_at: { $gte: since } }, "-logged_at", 20),
+    ]);
     data.sort((a, b) => eventDate(b) - eventDate(a));
     setSymptoms(data);
+    setRecentExchanges(recent);
     setLoading(false);
   };
 
@@ -248,7 +254,7 @@ export default function Symptoms() {
       <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) setEditing(null); }}>
         <DialogContent className="rounded-2xl max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-heading text-xl">{editing ? "Edit Symptom" : "Log a Symptom"}</DialogTitle></DialogHeader>
-          <SymptomForm initial={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} />
+          <SymptomForm initial={editing} recentExchanges={recentExchanges} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} />
         </DialogContent>
       </Dialog>
     </div>
