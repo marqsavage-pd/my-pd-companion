@@ -17,6 +17,25 @@ const eventDate = (e) => {
   return ts.length <= 10 ? moment(ts) : moment.utc(ts).local();
 };
 
+const formatDwell = (hours) => {
+  if (!hours) return "—";
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return `${h}:${m.toString().padStart(2, "0")}`;
+};
+
+const avgDwell = (xs) => {
+  const withDwell = xs.filter(e => e.dwell_hours != null);
+  if (!withDwell.length) return null;
+  return withDwell.reduce((a, e) => a + e.dwell_hours, 0) / withDwell.length;
+};
+
+const avgLostDwell = (xs) => {
+  const withLost = xs.filter(e => e.lost_dwell != null);
+  if (!withLost.length) return null;
+  return withLost.reduce((a, e) => a + e.lost_dwell, 0) / withLost.length;
+};
+
 export default function Exchanges() {
   const [exchanges, setExchanges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,18 +101,26 @@ export default function Exchanges() {
 
   const lastSession = exchanges[0];
   const lastUF = lastSession?.ultrafiltration || 0;
+  const recentAvgDwell = avgDwell(recentExchanges);
+  const recentAvgLost = avgLostDwell(recentExchanges);
 
   const handleEdit = (e) => { setEditing(e); setShowForm(true); };
 
   const renderDaySection = (day, items) => {
     const dayUF = items.reduce((acc, e) => acc + (e.ultrafiltration || 0), 0);
+    const dayAvgDwell = avgDwell(items);
+    const dayLostDwell = avgLostDwell(items);
     return (
       <section key={day}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold text-muted-foreground">
             {moment(day).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "dddd", sameElse: "MMM D, YYYY" })}
           </h3>
-          <span className="text-xs font-medium text-primary">UF: {dayUF > 0 ? "+" : ""}{dayUF} mL</span>
+          <div className="flex items-center gap-3 text-xs font-medium">
+            <span className="text-primary">UF: {dayUF > 0 ? "+" : ""}{dayUF} mL</span>
+            <span className="text-muted-foreground">Avg Dwell: {formatDwell(dayAvgDwell)}</span>
+            <span className="text-muted-foreground">Lost Dwell: {dayLostDwell != null ? `${Math.round(dayLostDwell)} min` : "—"}</span>
+          </div>
         </div>
         <div className="space-y-2">
           {items.map(e => (
@@ -124,6 +151,16 @@ export default function Exchanges() {
         <p className="text-xs font-semibold text-primary uppercase tracking-wider">Last Session UF</p>
         <p className="text-3xl font-bold text-primary mt-1">{lastUF > 0 ? "+" : ""}{lastUF} <span className="text-lg font-medium">mL</span></p>
         <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${eventDate(lastSession).format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
+        <div className="flex gap-6 mt-3 pt-3 border-t border-primary/15">
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Avg Dwell</p>
+            <p className="text-lg font-bold text-primary">{formatDwell(recentAvgDwell)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Lost Dwell</p>
+            <p className="text-lg font-bold text-primary">{recentAvgLost != null ? `${Math.round(recentAvgLost)} min` : "—"}</p>
+          </div>
+        </div>
       </div>
 
       <div className="relative">
