@@ -78,7 +78,7 @@ export default function Home() {
     const ts = e.logged_at || e.created_date;
     if (!ts) return "—";
     if (ts.length <= 10) return moment(ts).format("MMM D");
-    return moment.utc(ts).local().format(`MMM D${sep}HH:mm`);
+    return /[Zz]$|[+-]\d{2}:\d{2}$/.test(ts) ? moment.utc(ts).local().format(`MMM D${sep}HH:mm`) : moment(ts).format(`MMM D${sep}HH:mm`);
   };
 
   const greeting = () => {
