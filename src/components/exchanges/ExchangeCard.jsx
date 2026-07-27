@@ -4,7 +4,8 @@ import moment from "moment";
 const eventDate = (e) => {
   const ts = e.logged_at || e.created_date;
   if (!ts) return moment();
-  return ts.length <= 10 ? moment(ts) : moment.utc(ts).local();
+  if (ts.length <= 10) return moment(ts);
+  return /[Zz]$|[+-]\d{2}:\d{2}$/.test(ts) ? moment.utc(ts).local() : moment(ts);
 };
 
 const formatDwell = (hours) => {
