@@ -147,15 +147,15 @@ export default function Home() {
       </div>
 
       {/* Today's fluid summary */}
-      <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-primary uppercase tracking-wider">Today's Fluid Removed</p>
-            <p className="text-3xl font-bold text-primary mt-1">{totalUF > 0 ? "+" : ""}{totalUF} <span className="text-lg font-medium">mL</span></p>
+      <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Today's Fluid Removed</p>
+            <p className="text-2xl font-bold text-primary mt-0.5 leading-tight">{totalUF > 0 ? "+" : ""}{totalUF} <span className="text-sm font-medium">mL</span></p>
           </div>
-          <Droplets size={32} className="text-primary/30" />
+          <Droplets size={24} className="text-primary/30 shrink-0" />
         </div>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `${hasToday ? `${exchanges.length} session${exchanges.length !== 1 ? "s" : ""} today` : "Most recent session"} · ${formatSessionTime(lastSession)}` : "No sessions logged yet"}</p>
+        <p className="text-[11px] text-muted-foreground mt-1.5">{lastSession ? `${hasToday ? `${exchanges.length} session${exchanges.length !== 1 ? "s" : ""} today` : "Most recent session"} · ${formatSessionTime(lastSession)}` : "No sessions logged yet"}</p>
       </div>
 
       {/* Latest vitals */}
