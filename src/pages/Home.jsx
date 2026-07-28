@@ -7,12 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ExchangeForm from "@/components/exchanges/ExchangeForm";
 import VitalForm from "@/components/vitals/VitalForm";
+import StreakBadge from "@/components/home/StreakBadge";
+import SupplyAlert from "@/components/home/SupplyAlert";
+import WeightSparkline from "@/components/home/WeightSparkline";
 import moment from "moment";
 
 export default function Home() {
   const [exchanges, setExchanges] = useState([]);
   const [recentExchanges, setRecentExchanges] = useState([]);
   const [vitals, setVitals] = useState([]);
+  const [weightVitals, setWeightVitals] = useState([]);
+  const [supplies, setSupplies] = useState([]);
+  const [exchanges30, setExchanges30] = useState([]);
 
   const [symptoms, setSymptoms] = useState([]);
   const [journal, setJournal] = useState([]);
@@ -26,25 +32,33 @@ export default function Home() {
   const [user, setUser] = useState(null);
 
   const todayStart = moment().startOf("day").toISOString();
+  const sevenDaysAgo = moment().subtract(7, "days").toISOString();
+  const thirtyDaysAgo = moment().subtract(30, "days").toISOString();
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
-    const [u, ex, re, v, s, j] = await Promise.all([
+    const [u, ex, re, v, wv, s, j, sup, ex30] = await Promise.all([
       base44.auth.me(),
       base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
       base44.entities.Exchange.list("-logged_at", 3),
       base44.entities.VitalSign.list("-created_date", 5),
+      base44.entities.VitalSign.filter({ created_date: { $gte: sevenDaysAgo } }, "created_date", 60),
       base44.entities.Symptom.filter({ created_date: { $gte: todayStart } }, "-created_date", 10),
       base44.entities.JournalEntry.filter({ created_date: { $gte: todayStart } }, "-created_date", 5),
+      base44.entities.Supply.list(),
+      base44.entities.Exchange.filter({ logged_at: { $gte: thirtyDaysAgo } }, "logged_at", 200),
     ]);
     setUser(u);
     setExchanges(ex);
     setRecentExchanges(re);
     setVitals(v);
+    setWeightVitals(wv);
     setSymptoms(s);
     setJournal(j);
+    setSupplies(sup);
+    setExchanges30(ex30);
     setLoading(false);
   };
 
@@ -80,6 +94,29 @@ export default function Home() {
   const latestVital = vitals[0];
   const hasCloudy = exchanges.some(e => e.solution_appearance === "cloudy");
 
+  const streakDays = (() => {
+    const days = new Set();
+    exchanges30.forEach(e => {
+      const ts = e.logged_at || e.created_date;
+      if (!ts) return;
+      const d = ts.length <= 10 ? moment(ts) : moment.utc(ts).local();
+      days.add(d.format("YYYY-MM-DD"));
+    });
+    let cursor = moment().startOf("day");
+    if (!days.has(cursor.format("YYYY-MM-DD"))) {
+      cursor.subtract(1, "day");
+      if (!days.has(cursor.format("YYYY-MM-DD"))) return 0;
+    }
+    let n = 0;
+    while (days.has(cursor.format("YYYY-MM-DD"))) { n++; cursor.subtract(1, "day"); }
+    return n;
+  })();
+
+  const isCapdToday = exchanges.some(e => e.modality === "capd");
+  const dailyTarget = isCapdToday ? 4 : 1;
+  const sessionCount = exchanges.length;
+  const progressPct = Math.min(100, (sessionCount / dailyTarget) * 100);
+
   const formatDwell = (hours) => {
     if (!hours) return null;
     const h = Math.floor(hours);
@@ -110,11 +147,14 @@ export default function Home() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl md:text-3xl font-bold">
-          {greeting()}{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
-        </h1>
-        <p className="text-muted-foreground mt-1">{moment().format("dddd, MMMM D")}</p>
+      <div className="flex items-end justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="font-heading text-2xl md:text-3xl font-bold">
+            {greeting()}{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
+          </h1>
+          <p className="text-muted-foreground mt-1">{moment().format("dddd, MMMM D")}</p>
+        </div>
+        <StreakBadge days={streakDays} />
       </div>
 
       {hasCloudy && (
@@ -146,6 +186,12 @@ export default function Home() {
         </button>
       </div>
 
+      {/* Today zone */}
+      <div className="flex items-center gap-3 pt-1">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Today</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
       {/* Today's fluid summary */}
       <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-4">
         <div className="flex items-center justify-between gap-3">
@@ -156,6 +202,17 @@ export default function Home() {
           <Droplets size={24} className="text-primary/30 shrink-0" />
         </div>
         <p className="text-[11px] text-muted-foreground mt-1.5">{lastSession ? `${hasToday ? `${exchanges.length} session${exchanges.length !== 1 ? "s" : ""} today` : "Most recent session"} · ${formatSessionTime(lastSession)}` : "No sessions logged yet"}</p>
+        {hasToday && (
+          <div className="mt-2.5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-muted-foreground font-medium">{sessionCount} of {dailyTarget} sessions</span>
+              <span className="text-[10px] text-primary font-semibold">{Math.round(progressPct)}%</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-primary/10 overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Latest vitals */}
@@ -170,6 +227,7 @@ export default function Home() {
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Weight</p>
               <p className="text-lg font-bold mt-1">{latestVital.weight_lbs ? `${latestVital.weight_lbs}` : "—"}</p>
               <p className="text-[10px] text-muted-foreground">lbs</p>
+              <WeightSparkline vitals={weightVitals} />
             </div>
             <div className="bg-card rounded-2xl border p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BP</p>
@@ -184,6 +242,12 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Recent zone */}
+      <div className="flex items-center gap-3 pt-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Recent</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
 
       {/* Recent sessions */}
       {recentExchanges.length > 0 && (
@@ -260,6 +324,14 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Actions zone */}
+      <div className="flex items-center gap-3 pt-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      <SupplyAlert supplies={supplies} />
 
       {/* Order supplies */}
       <section>
