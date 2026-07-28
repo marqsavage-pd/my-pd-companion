@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Droplets, HeartPulse, Activity, BookOpen, Plus, ArrowRight, AlertTriangle, ExternalLink } from "lucide-react";
+import { Droplets, HeartPulse, Activity, BookOpen, Plus, ArrowRight, AlertTriangle, ExternalLink, StickyNote, MessageCircleQuestion, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ExchangeForm from "@/components/exchanges/ExchangeForm";
 import VitalForm from "@/components/vitals/VitalForm";
@@ -18,6 +19,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showExchangeForm, setShowExchangeForm] = useState(false);
   const [showVitalForm, setShowVitalForm] = useState(false);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [noteCategory, setNoteCategory] = useState("question");
+  const [savingNote, setSavingNote] = useState(false);
   const [user, setUser] = useState(null);
 
   const todayStart = moment().startOf("day").toISOString();
@@ -53,6 +58,17 @@ export default function Home() {
     await base44.entities.VitalSign.create(data);
     setShowVitalForm(false);
     loadData();
+  };
+
+  const handleAddNote = async (e) => {
+    e.preventDefault();
+    if (!noteText.trim()) return;
+    setSavingNote(true);
+    await base44.entities.AppointmentNote.create({ text: noteText.trim(), category: noteCategory });
+    setNoteText("");
+    setNoteCategory("question");
+    setSavingNote(false);
+    setShowNoteForm(false);
   };
 
 
@@ -122,6 +138,11 @@ export default function Home() {
           className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-rose-500/10 border border-rose-200/50 hover:bg-rose-500/15 transition-all">
           <HeartPulse size={15} className="text-rose-600" />
           <span className="text-sm font-semibold text-rose-900">Record Vitals</span>
+        </button>
+        <button onClick={() => setShowNoteForm(true)}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-amber-500/10 border border-amber-200/50 hover:bg-amber-500/15 transition-all">
+          <StickyNote size={15} className="text-amber-600" />
+          <span className="text-sm font-semibold text-amber-900">Note</span>
         </button>
       </div>
 
@@ -274,6 +295,32 @@ export default function Home() {
         <DialogContent className="rounded-2xl max-w-md">
           <DialogHeader><DialogTitle className="font-heading text-xl">Record Vitals</DialogTitle></DialogHeader>
           <VitalForm onSubmit={handleLogVitals} onCancel={() => setShowVitalForm(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showNoteForm} onOpenChange={(o) => { setShowNoteForm(o); if (!o) setNoteText(""); }}>
+        <DialogContent className="rounded-2xl max-w-md">
+          <DialogHeader><DialogTitle className="font-heading text-xl">Quick Note</DialogTitle></DialogHeader>
+          <form onSubmit={handleAddNote} className="space-y-4">
+            <Input value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Add a question or supply to request..." className="rounded-xl" autoFocus />
+            <div className="flex gap-2">
+              {[
+                { value: "question", label: "Ask", icon: MessageCircleQuestion },
+                { value: "supply", label: "Supply", icon: Package },
+              ].map(c => (
+                <button key={c.value} type="button" onClick={() => setNoteCategory(c.value)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${noteCategory === c.value ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground"}`}>
+                  <c.icon size={15} /> {c.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-1">
+              <Button type="button" variant="outline" onClick={() => setShowNoteForm(false)} className="flex-1 rounded-xl">Cancel</Button>
+              <Button type="submit" disabled={savingNote || !noteText.trim()} className="flex-1 rounded-xl">
+                {savingNote ? "Adding..." : "Add Note"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
