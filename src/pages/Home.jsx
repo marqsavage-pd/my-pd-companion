@@ -112,26 +112,16 @@ export default function Home() {
       )}
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex gap-2">
         <button onClick={() => setShowExchangeForm(true)}
-          className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/50 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-            <Plus size={20} className="text-blue-600" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold text-blue-900">Log Exchange</p>
-            <p className="text-xs text-blue-600/70">{exchanges.length} today</p>
-          </div>
+          className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-blue-500/10 border border-blue-200/50 hover:bg-blue-500/15 transition-all">
+          <Plus size={15} className="text-blue-600" />
+          <span className="text-sm font-semibold text-blue-900">Log Exchange</span>
         </button>
         <button onClick={() => setShowVitalForm(true)}
-          className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-rose-50 to-rose-100/50 border border-rose-200/50 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
-            <HeartPulse size={20} className="text-rose-600" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold text-rose-900">Record Vitals</p>
-            <p className="text-xs text-rose-600/70">Weight & BP</p>
-          </div>
+          className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-rose-500/10 border border-rose-200/50 hover:bg-rose-500/15 transition-all">
+          <HeartPulse size={15} className="text-rose-600" />
+          <span className="text-sm font-semibold text-rose-900">Record Vitals</span>
         </button>
       </div>
 
