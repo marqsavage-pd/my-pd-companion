@@ -32,7 +32,6 @@ export default function Home() {
   const [user, setUser] = useState(null);
 
   const todayStart = moment().startOf("day").toISOString();
-  const sevenDaysAgo = moment().subtract(7, "days").toISOString();
   const thirtyDaysAgo = moment().subtract(30, "days").toISOString();
 
   useEffect(() => { loadData(); }, []);
@@ -44,7 +43,7 @@ export default function Home() {
       base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
       base44.entities.Exchange.list("-logged_at", 3),
       base44.entities.VitalSign.list("-created_date", 5),
-      base44.entities.VitalSign.filter({ created_date: { $gte: sevenDaysAgo } }, "created_date", 60),
+      base44.entities.VitalSign.list("-created_date", 30),
       base44.entities.Symptom.filter({ created_date: { $gte: todayStart } }, "-created_date", 10),
       base44.entities.JournalEntry.filter({ created_date: { $gte: todayStart } }, "-created_date", 5),
       base44.entities.Supply.list(),
