@@ -17,15 +17,18 @@ export default function WeightSparkline({ vitals }) {
     })
     .join(" ");
   return (
-    <svg width={w} height={h} className="mx-auto mt-1.5" aria-hidden="true">
-      <polyline
-        points={pts}
-        fill="none"
-        stroke="hsl(var(--primary))"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <div className="mt-1.5">
+      <svg width={w} height={h} className="mx-auto block" aria-hidden="true">
+        <polyline
+          points={pts}
+          fill="none"
+          stroke="hsl(var(--primary))"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <p className="text-[9px] text-muted-foreground mt-0.5">{min}–{max} lbs</p>
+    </div>
   );
 }

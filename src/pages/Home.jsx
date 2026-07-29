@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Droplets, HeartPulse, Activity, BookOpen, Plus, ArrowRight, AlertTriangle, ExternalLink, StickyNote, MessageCircleQuestion, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,10 @@ import VitalForm from "@/components/vitals/VitalForm";
 import StreakBadge from "@/components/home/StreakBadge";
 import SupplyAlert from "@/components/home/SupplyAlert";
 import WeightSparkline from "@/components/home/WeightSparkline";
+import SmartNextAction from "@/components/home/SmartNextAction";
+import RefreshButton from "@/components/home/RefreshButton";
+import ActivityTimeline from "@/components/home/ActivityTimeline";
+import EmptyState from "@/components/home/EmptyState";
 import moment from "moment";
 
 export default function Home() {
@@ -29,15 +33,17 @@ export default function Home() {
   const [noteText, setNoteText] = useState("");
   const [noteCategory, setNoteCategory] = useState("question");
   const [savingNote, setSavingNote] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState(null);
 
   const todayStart = moment().startOf("day").toISOString();
   const thirtyDaysAgo = moment().subtract(30, "days").toISOString();
+  const navigate = useNavigate();
 
   useEffect(() => { loadData(); }, []);
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true); else setLoading(true);
     const [u, ex, re, v, wv, s, j, sup, ex30] = await Promise.all([
       base44.auth.me(),
       base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
@@ -59,6 +65,7 @@ export default function Home() {
     setSupplies(sup);
     setExchanges30(ex30);
     setLoading(false);
+    setRefreshing(false);
   };
 
   const handleLogExchange = async (data) => {
@@ -115,6 +122,7 @@ export default function Home() {
   const dailyTarget = isCapdToday ? 4 : 1;
   const sessionCount = exchanges.length;
   const progressPct = Math.min(100, (sessionCount / dailyTarget) * 100);
+  const lowSupplies = supplies.filter(s => (s.qty || 0) <= (s.reorder_point || 0) && !s.ordered).map(s => s.title);
 
   const formatDwell = (hours) => {
     if (!hours) return null;
@@ -166,6 +174,16 @@ export default function Home() {
         </div>
       )}
 
+      {/* Smart next action */}
+      <SmartNextAction
+        sessionCount={sessionCount}
+        dailyTarget={dailyTarget}
+        progressPct={progressPct}
+        lowSupplies={lowSupplies}
+        onLogExchange={() => setShowExchangeForm(true)}
+        onReorder={() => navigate("/inventory")}
+      />
+
       {/* Quick actions */}
       <div className="flex gap-2">
         <button onClick={() => setShowExchangeForm(true)}
@@ -215,6 +233,14 @@ export default function Home() {
       </div>
 
       {/* Latest vitals */}
+      {!latestVital && (
+        <section>
+          <h2 className="font-heading text-lg font-semibold mb-3">Latest Vitals</h2>
+          <div className="bg-card rounded-2xl border">
+            <EmptyState icon={HeartPulse} title="No vitals recorded yet" description="Record your weight and blood pressure to start tracking trends." actionLabel="Record Vitals" onAction={() => setShowVitalForm(true)} />
+          </div>
+        </section>
+      )}
       {latestVital && (
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -248,80 +274,18 @@ export default function Home() {
         <div className="flex-1 h-px bg-border" />
       </div>
 
-      {/* Recent sessions */}
-      {recentExchanges.length > 0 && (
+      {(recentExchanges.length > 0 || symptoms.length > 0 || journal.length > 0) ? (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-heading text-lg font-semibold">Recent Sessions</h2>
+            <h2 className="font-heading text-lg font-semibold">Recent Activity</h2>
             <Link to="/exchanges" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">View all <ArrowRight size={14} /></Link>
           </div>
-          <div className="space-y-2">
-            {recentExchanges.map(e => {
-              const uf = e.ultrafiltration || 0;
-              const isCloudy = e.solution_appearance === "cloudy";
-              return (
-                <div key={e.id} className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                    <Droplets size={18} className="text-blue-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold capitalize">{e.modality}</span>
-                      <span className="text-xs text-muted-foreground">{e.dextrose_concentration}% dextrose</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${e.solution_appearance === "clear" ? "bg-emerald-100 text-emerald-700" : e.solution_appearance === "cloudy" ? "bg-red-100 text-red-700" : e.solution_appearance === "bloody" ? "bg-orange-100 text-orange-700" : "bg-amber-100 text-amber-700"}`}>
-                        {e.solution_appearance}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatSessionTime(e, " · ")}</p>
-                    {formatDwell(e.dwell_hours) && <p className="text-[10px] text-muted-foreground mt-0.5">Dwell: {formatDwell(e.dwell_hours)}</p>}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={`text-sm font-bold ${uf > 0 ? "text-emerald-600" : uf < 0 ? "text-amber-600" : "text-muted-foreground"}`}>
-                      {uf > 0 ? "+" : ""}{uf}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">mL UF</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <ActivityTimeline exchanges={recentExchanges} symptoms={symptoms} journal={journal} />
         </section>
-      )}
-
-      {/* Recent symptoms */}
-      {symptoms.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-heading text-lg font-semibold">Today's Symptoms</h2>
-            <Link to="/symptoms" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">View all <ArrowRight size={14} /></Link>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {symptoms.slice(0, 6).map(s => {
-              const severityColors = ["", "bg-emerald-100 text-emerald-700", "bg-lime-100 text-lime-700", "bg-amber-100 text-amber-700", "bg-orange-100 text-orange-700", "bg-red-100 text-red-700"];
-              return (
-                <div key={s.id} className="shrink-0 p-3 rounded-2xl bg-card border min-w-[120px]">
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mb-1.5 ${severityColors[s.severity]}`}>{s.severity}/5</span>
-                  <p className="text-sm font-medium capitalize">{s.symptom_type.replace(/_/g, " ")}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{moment.utc(s.created_date).local().format("HH:mm")}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {journal.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-heading text-lg font-semibold">Journal</h2>
-            <Link to="/journal" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">Write <ArrowRight size={14} /></Link>
-          </div>
-          <div className="bg-card rounded-2xl border p-4">
-            {journal[0].title && <p className="text-sm font-semibold mb-1">{journal[0].title}</p>}
-            <p className="text-sm text-muted-foreground line-clamp-2">{journal[0].content}</p>
-            <p className="text-xs text-muted-foreground mt-2">{moment.utc(journal[0].created_date).local().format("HH:mm")}</p>
-          </div>
-        </section>
+      ) : (
+        <div className="bg-card rounded-2xl border">
+          <EmptyState icon={Activity} title="No recent activity" description="Log exchanges, symptoms, or journal entries to see your timeline here." actionLabel="Log Exchange" onAction={() => setShowExchangeForm(true)} />
+        </div>
       )}
 
       {/* Actions zone */}
@@ -354,6 +318,8 @@ export default function Home() {
           </a>
         </div>
       </section>
+
+      <RefreshButton onClick={() => loadData(true)} loading={refreshing} />
 
       <Dialog open={showExchangeForm} onOpenChange={setShowExchangeForm}>
         <DialogContent className="rounded-2xl max-w-md max-h-[90vh] overflow-y-auto">
