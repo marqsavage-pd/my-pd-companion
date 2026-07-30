@@ -104,7 +104,8 @@ export default function Home() {
     exchanges30.forEach(e => {
       const ts = e.logged_at || e.created_date;
       if (!ts) return;
-      const d = ts.length <= 10 ? moment(ts) : moment.utc(ts).local();
+      const hasTz = /[Zz]$|[+-]\d{2}:\d{2}$/.test(ts);
+      const d = ts.length <= 10 || !hasTz ? moment(ts) : moment.utc(ts).local();
       days.add(d.format("YYYY-MM-DD"));
     });
     let cursor = moment().startOf("day");
