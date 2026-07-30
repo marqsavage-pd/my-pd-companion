@@ -186,11 +186,6 @@ export default function Home() {
 
       {/* Quick actions */}
       <div className="flex gap-2">
-        <button onClick={() => setShowExchangeForm(true)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-blue-500/10 border border-blue-200/50 hover:bg-blue-500/15 transition-all">
-          <Plus size={15} className="text-blue-600" />
-          <span className="text-sm font-semibold text-blue-900">Log Exchange</span>
-        </button>
         <button onClick={() => setShowVitalForm(true)}
           className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-rose-500/10 border border-rose-200/50 hover:bg-rose-500/15 transition-all">
           <HeartPulse size={15} className="text-rose-600" />
