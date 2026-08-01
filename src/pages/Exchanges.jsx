@@ -159,7 +159,7 @@ export default function Exchanges() {
           </div>
           <div>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Lost Dwell</p>
-            <p className="text-lg font-bold text-primary">{recentAvgLost != null ? `${Math.round(recentAvgLost)} min` : "0 min"}</p>
+            <p className="text-lg font-bold text-primary">{lastSession?.lost_dwell != null ? `${Math.round(lastSession.lost_dwell)} min` : "0 min"}</p>
           </div>
         </div>
       </div>
