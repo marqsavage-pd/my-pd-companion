@@ -109,10 +109,12 @@ export default function Home() {
       days.add(d.format("YYYY-MM-DD"));
     });
     let cursor = moment().startOf("day");
-    if (!days.has(cursor.format("YYYY-MM-DD"))) {
+    let grace = 0;
+    while (!days.has(cursor.format("YYYY-MM-DD")) && grace < 3) {
       cursor.subtract(1, "day");
-      if (!days.has(cursor.format("YYYY-MM-DD"))) return 0;
+      grace++;
     }
+    if (!days.has(cursor.format("YYYY-MM-DD"))) return 0;
     let n = 0;
     while (days.has(cursor.format("YYYY-MM-DD"))) { n++; cursor.subtract(1, "day"); }
     return n;
