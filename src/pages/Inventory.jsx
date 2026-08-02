@@ -131,7 +131,7 @@ export default function Inventory() {
                           <p className="text-sm font-medium">{moment(item.expected_delivery).format("MMM D")}</p>
                         </div>
                       )}
-                      {item.last_restocked && (
+                      {item.last_restocked && moment().diff(moment(item.last_restocked), "days") < 1 && (
                         <div>
                           <p className="text-[10px] text-muted-foreground uppercase">Restocked</p>
                           <p className="text-sm font-medium">{moment(item.last_restocked).format("MMM D")}</p>
