@@ -94,7 +94,7 @@ export default function Home() {
   const hasToday = exchanges.length > 0;
   const totalUF = hasToday
     ? exchanges.reduce((sum, e) => sum + (e.ultrafiltration || 0), 0)
-    : (recentExchanges[0]?.ultrafiltration ?? null);
+    : (recentExchanges.find(e => e.ultrafiltration != null)?.ultrafiltration ?? null);
   const lastSession = exchanges[0] || recentExchanges[0];
   const latestVital = vitals[0];
   const hasCloudy = exchanges.some(e => e.solution_appearance === "cloudy");
@@ -131,15 +131,6 @@ export default function Home() {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}:${m.toString().padStart(2, "0")}`;
-  };
-
-  // Use measured_at when available (the actual measurement time); fall back to
-  // created_date. Date-only strings are parsed as local to avoid UTC shift.
-  const formatVitalDate = (v) => {
-    const ts = v.measured_at;
-    if (!ts) return moment.utc(v.created_date).local().format("MMM D");
-    if (ts.length <= 10) return moment(ts).format("MMM D");
-    return /[Zz]$|[+-]\d{2}:\d{2}$/.test(ts) ? moment.utc(ts).local().format("MMM D") : moment(ts).format("MMM D");
   };
 
   // logged_at may be stored as a date-only string (e.g. "2026-07-13"); parsing it
@@ -265,7 +256,7 @@ export default function Home() {
             <div className="bg-card rounded-2xl border p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Logged</p>
               <p className="text-lg font-bold mt-1">{moment.utc(latestVital.created_date).local().format("HH:mm")}</p>
-              <p className="text-[10px] text-muted-foreground">{formatVitalDate(latestVital)}</p>
+              <p className="text-[10px] text-muted-foreground">{moment.utc(latestVital.created_date).local().format("MMM D")}</p>
             </div>
           </div>
         </section>
