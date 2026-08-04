@@ -51,6 +51,18 @@
     "logged_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "weight": {
+      "type": "number",
+      "description": "Pre-treatment weight in lbs"
+    },
+    "bp_systolic": {
+      "type": "number",
+      "description": "Pre-treatment systolic blood pressure (mmHg)"
+    },
+    "bp_diastolic": {
+      "type": "number",
+      "description": "Pre-treatment diastolic blood pressure (mmHg)"
     }
   },
   "required": [
