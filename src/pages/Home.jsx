@@ -43,7 +43,17 @@ export default function Home() {
   useEffect(() => { loadData(); }, []);
 
   const loadData = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true); else setLoading(true);
+    if (isRefresh) {
+      setRefreshing(true);
+      try {
+        await Promise.all([
+          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: true }),
+          base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
+        ]);
+      } catch (e) { console.error("Sync error:", e); }
+    } else {
+      setLoading(true);
+    }
     const [u, ex, re, v, wv, s, j, sup, ex30] = await Promise.all([
       base44.auth.me(),
       base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
