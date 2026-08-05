@@ -47,7 +47,7 @@ export default function Home() {
       setRefreshing(true);
       try {
         await Promise.all([
-          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: true }),
+          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: true, start_date: thirtyDaysAgo.slice(0, 10) }),
           base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
         ]);
       } catch (e) { console.error("Sync error:", e); }
@@ -58,8 +58,8 @@ export default function Home() {
       base44.auth.me(),
       base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
       base44.entities.Exchange.list("-logged_at", 3),
-      base44.entities.VitalSign.list("-created_date", 5),
-      base44.entities.VitalSign.list("-created_date", 30),
+      base44.entities.VitalSign.list("-measured_at", 5),
+      base44.entities.VitalSign.list("-measured_at", 30),
       base44.entities.Symptom.filter({ created_date: { $gte: todayStart } }, "-created_date", 10),
       base44.entities.JournalEntry.filter({ created_date: { $gte: todayStart } }, "-created_date", 5),
       base44.entities.Supply.list(),
