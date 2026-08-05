@@ -102,11 +102,12 @@ export default function Home() {
   };
 
 
-  const hasToday = exchanges.length > 0;
+  const todayCompleted = exchanges.filter(e => e.ultrafiltration != null);
+  const hasToday = todayCompleted.length > 0;
   const totalUF = hasToday
-    ? exchanges.reduce((sum, e) => sum + (e.ultrafiltration || 0), 0)
+    ? todayCompleted.reduce((sum, e) => sum + e.ultrafiltration, 0)
     : (recentExchanges.find(e => e.ultrafiltration != null)?.ultrafiltration ?? null);
-  const lastSession = exchanges[0] || recentExchanges[0];
+  const lastSession = todayCompleted[0] || recentExchanges[0];
   const latestVital = vitals[0];
   const hasCloudy = exchanges.some(e => e.solution_appearance === "cloudy");
 
@@ -131,9 +132,9 @@ export default function Home() {
     return n;
   })();
 
-  const isCapdToday = exchanges.some(e => e.modality === "capd");
+  const isCapdToday = todayCompleted.some(e => e.modality === "capd");
   const dailyTarget = isCapdToday ? 4 : 1;
-  const sessionCount = exchanges.length;
+  const sessionCount = todayCompleted.length;
   const progressPct = Math.min(100, (sessionCount / dailyTarget) * 100);
   const lowSupplies = supplies.filter(s => (s.qty || 0) <= (s.reorder_point || 0) && !s.ordered).map(s => s.title);
 
@@ -223,7 +224,7 @@ export default function Home() {
           </div>
           <Droplets size={24} className="text-primary/30 shrink-0" />
         </div>
-        <p className="text-[11px] text-muted-foreground mt-1.5">{lastSession ? `${hasToday ? `${exchanges.length} session${exchanges.length !== 1 ? "s" : ""} today` : "Most recent session"} · ${formatSessionTime(lastSession)}` : "No sessions logged yet"}</p>
+        <p className="text-[11px] text-muted-foreground mt-1.5">{lastSession ? `${hasToday ? `${sessionCount} session${sessionCount !== 1 ? "s" : ""} today` : "Most recent session"} · ${formatSessionTime(lastSession)}` : "No sessions logged yet"}</p>
         {hasToday && (
           <div className="mt-2.5">
             <div className="flex items-center justify-between mb-1">
