@@ -1,7 +1,13 @@
 import { HeartPulse, Pencil, Trash2 } from "lucide-react";
-import moment from "moment";
+import { parseTimestamp } from "@/lib/dateUtils";
 
-const eventDate = (v) => moment.utc(v.measured_at || v.created_date).local();
+const tsHasTime = (ts) => ts && ts.length > 10;
+const formatVitalDate = (v) => {
+  const ts = v.measured_at || v.created_date;
+  const m = parseTimestamp(ts);
+  if (!m) return "—";
+  return tsHasTime(ts) ? m.format("MMM D, YYYY · HH:mm") : m.format("MMM D, YYYY");
+};
 
 export default function VitalCard({ vital, onEdit, onDelete }) {
   const v = vital;
@@ -16,7 +22,7 @@ export default function VitalCard({ vital, onEdit, onDelete }) {
           {v.systolic_bp && <span className="text-sm font-semibold">{v.systolic_bp}/{v.diastolic_bp} mmHg</span>}
         </div>
         {v.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{v.notes}</p>}
-        <p className="text-[10px] text-muted-foreground mt-1">{eventDate(v).format("MMM D, YYYY · HH:mm")}</p>
+        <p className="text-[10px] text-muted-foreground mt-1">{formatVitalDate(v)}</p>
       </div>
       {onEdit && onDelete && (
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">

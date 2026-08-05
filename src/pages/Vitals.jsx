@@ -7,11 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import VitalForm from "@/components/vitals/VitalForm";
 import VitalCard from "@/components/vitals/VitalCard";
 import moment from "moment";
+import { parseTimestamp } from "@/lib/dateUtils";
 
 const MONTH_START = moment().startOf("month");
 const JUNE_START = moment().subtract(1, "month").startOf("month");
 const prevMonthLabel = moment().subtract(1, "month").format("MMMM");
-const eventDate = (v) => moment.utc(v.measured_at || v.created_date).local();
+const eventDate = (v) => parseTimestamp(v.measured_at || v.created_date);
 
 export default function Vitals() {
   const [vitals, setVitals] = useState([]);
@@ -147,7 +148,7 @@ export default function Vitals() {
             {latest.systolic_bp ? (
               <p className="text-2xl font-bold">{latest.systolic_bp}/{latest.diastolic_bp} <span className="text-sm font-medium text-muted-foreground">mmHg</span></p>
             ) : <p className="text-2xl font-bold text-muted-foreground">—</p>}
-            <p className="text-xs text-muted-foreground mt-1">{moment.utc(latest.created_date).local().format("MMM D, HH:mm")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{latest.measured_at && latest.measured_at.length > 10 ? eventDate(latest).format("MMM D, HH:mm") : eventDate(latest).format("MMM D")}</p>
           </div>
         </div>
       )}

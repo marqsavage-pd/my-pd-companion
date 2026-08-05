@@ -14,6 +14,7 @@ import RefreshButton from "@/components/home/RefreshButton";
 import ActivityTimeline from "@/components/home/ActivityTimeline";
 import EmptyState from "@/components/home/EmptyState";
 import moment from "moment";
+import { parseTimestamp } from "@/lib/dateUtils";
 
 export default function Home() {
   const [exchanges, setExchanges] = useState([]);
@@ -254,9 +255,9 @@ export default function Home() {
               <p className="text-[10px] text-muted-foreground">mmHg</p>
             </div>
             <div className="bg-card rounded-2xl border p-3 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Logged</p>
-              <p className="text-lg font-bold mt-1">{moment.utc(latestVital.created_date).local().format("HH:mm")}</p>
-              <p className="text-[10px] text-muted-foreground">{moment.utc(latestVital.created_date).local().format("MMM D")}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Measured</p>
+              <p className="text-lg font-bold mt-1">{latestVital.measured_at && latestVital.measured_at.length > 10 ? parseTimestamp(latestVital.measured_at).format("HH:mm") : "—"}</p>
+              <p className="text-[10px] text-muted-foreground">{parseTimestamp(latestVital.measured_at || latestVital.created_date)?.format("MMM D") || "—"}</p>
             </div>
           </div>
         </section>
