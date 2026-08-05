@@ -36,8 +36,8 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState(null);
 
-  const todayStart = moment().startOf("day").toISOString();
-  const thirtyDaysAgo = moment().subtract(30, "days").toISOString();
+  const todayStart = moment().startOf("day").format("YYYY-MM-DD");
+  const oneYearAgo = moment().subtract(365, "days").format("YYYY-MM-DD");
   const navigate = useNavigate();
 
   useEffect(() => { loadData(); }, []);
@@ -47,7 +47,7 @@ export default function Home() {
       setRefreshing(true);
       try {
         await Promise.all([
-          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: true, start_date: thirtyDaysAgo.slice(0, 10) }),
+          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: true, start_date: oneYearAgo }),
           base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
         ]);
       } catch (e) { console.error("Sync error:", e); }
@@ -63,7 +63,7 @@ export default function Home() {
       base44.entities.Symptom.filter({ created_date: { $gte: todayStart } }, "-created_date", 10),
       base44.entities.JournalEntry.filter({ created_date: { $gte: todayStart } }, "-created_date", 5),
       base44.entities.Supply.list(),
-      base44.entities.Exchange.filter({ logged_at: { $gte: thirtyDaysAgo } }, "logged_at", 200),
+      base44.entities.Exchange.filter({ logged_at: { $gte: oneYearAgo } }, "logged_at", 500),
     ]);
     setUser(u);
     setExchanges(ex);
