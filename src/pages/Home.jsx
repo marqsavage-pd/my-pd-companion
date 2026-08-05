@@ -252,7 +252,7 @@ export default function Home() {
             <h2 className="font-heading text-lg font-semibold">Latest Vitals</h2>
             <Link to="/vitals" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">View all <ArrowRight size={14} /></Link>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div className="bg-card rounded-2xl border p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Weight</p>
               <p className="text-lg font-bold mt-1">{latestVital.weight_lbs ? `${latestVital.weight_lbs}` : "—"}</p>
@@ -263,11 +263,6 @@ export default function Home() {
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BP</p>
               <p className="text-lg font-bold mt-1">{latestVital.systolic_bp ? `${latestVital.systolic_bp}/${latestVital.diastolic_bp}` : "—"}</p>
               <p className="text-[10px] text-muted-foreground">mmHg</p>
-            </div>
-            <div className="bg-card rounded-2xl border p-3 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Measured</p>
-              <p className="text-lg font-bold mt-1">{latestVital.measured_at && latestVital.measured_at.length > 10 ? parseTimestamp(latestVital.measured_at).format("HH:mm") : "—"}</p>
-              <p className="text-[10px] text-muted-foreground">{parseTimestamp(latestVital.measured_at || latestVital.created_date)?.format("MMM D") || "—"}</p>
             </div>
           </div>
         </section>
