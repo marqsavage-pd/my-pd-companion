@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Droplets, HeartPulse, BookOpen, ChevronDown } from "lucide-react";
-import moment from "moment";
+import { parseTimestamp } from "@/lib/dateUtils";
 
 const fmtTime = (ts) => {
   if (!ts) return "";
-  const m = ts.length <= 10 ? moment(ts) : moment.utc(ts).local();
-  return m.format("MMM D · HH:mm");
+  const m = parseTimestamp(ts);
+  if (!m) return "";
+  return ts.length <= 10 ? m.format("MMM D") : m.format("MMM D · HH:mm");
 };
 
 export default function ActivityTimeline({ exchanges = [], symptoms = [], journal = [] }) {
