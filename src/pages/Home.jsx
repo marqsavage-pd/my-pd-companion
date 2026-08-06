@@ -47,7 +47,7 @@ export default function Home() {
       setRefreshing(true);
       try {
         await Promise.all([
-          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: true, start_date: oneYearAgo }),
+          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: oneYearAgo }),
           base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
         ]);
       } catch (e) { console.error("Sync error:", e); }
