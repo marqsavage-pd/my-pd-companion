@@ -46,6 +46,8 @@ export default async function(req) {
       if (d) existingByDate[d] = v;
     }
 
+    const toCreate = [];
+    const toUpdate = [];
     const created = [];
     const updated = [];
 
@@ -54,31 +56,38 @@ export default async function(req) {
       const existing = existingByDate[date];
 
       if (!existing) {
-        // Create new vital record for this date
-        const record = {
+        toCreate.push({
           measured_at: date,
           weight_lbs: sv.weight_lbs,
           systolic_bp: sv.systolic_bp,
           diastolic_bp: sv.diastolic_bp,
-        };
-        await base44.asServiceRole.entities.VitalSign.create(record);
-        created.push({ date, ...record });
+        });
       } else {
-        // Fill in missing fields if only_nulls (default)
         const patch = {};
         if (onlyNulls) {
           if (existing.weight_lbs == null && sv.weight_lbs != null) patch.weight_lbs = sv.weight_lbs;
           if (existing.systolic_bp == null && sv.systolic_bp != null) patch.systolic_bp = sv.systolic_bp;
           if (existing.diastolic_bp == null && sv.diastolic_bp != null) patch.diastolic_bp = sv.diastolic_bp;
         } else {
-          if (sv.weight_lbs != null) patch.weight_lbs = sv.weight_lbs;
-          if (sv.systolic_bp != null) patch.systolic_bp = sv.systolic_bp;
-          if (sv.diastolic_bp != null) patch.diastolic_bp = sv.diastolic_bp;
+          if (sv.weight_lbs != null && existing.weight_lbs !== sv.weight_lbs) patch.weight_lbs = sv.weight_lbs;
+          if (sv.systolic_bp != null && existing.systolic_bp !== sv.systolic_bp) patch.systolic_bp = sv.systolic_bp;
+          if (sv.diastolic_bp != null && existing.diastolic_bp !== sv.diastolic_bp) patch.diastolic_bp = sv.diastolic_bp;
         }
         if (!Object.keys(patch).length) continue;
-        await base44.asServiceRole.entities.VitalSign.update(existing.id, patch);
-        updated.push({ id: existing.id, date, ...patch });
+        toUpdate.push({ id: existing.id, ...patch });
       }
+    }
+
+    // Bulk create new records
+    if (toCreate.length) {
+      await base44.asServiceRole.entities.VitalSign.bulkCreate(toCreate);
+      created.push(...toCreate);
+    }
+
+    // Bulk update changed records
+    if (toUpdate.length) {
+      await base44.asServiceRole.entities.VitalSign.bulkUpdate(toUpdate);
+      updated.push(...toUpdate);
     }
 
     return Response.json({
