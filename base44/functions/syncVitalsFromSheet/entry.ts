@@ -38,8 +38,8 @@ export default async function(req) {
       sheetMap[date] = { weight_lbs: weight, systolic_bp: sys, diastolic_bp: dia };
     }
 
-    // Fetch all existing vitals and index by measured_at date
-    const vitals = await base44.asServiceRole.entities.VitalSign.list('-created_date', 500);
+    // Fetch existing vitals in range and index by measured_at date
+    const vitals = await base44.asServiceRole.entities.VitalSign.filter({ measured_at: { $gte: startDate } }, '-created_date', 500);
     const existingByDate = {};
     for (const v of vitals) {
       const d = laDate(v.measured_at || v.created_date);

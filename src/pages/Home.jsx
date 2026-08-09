@@ -38,22 +38,12 @@ export default function Home() {
 
   const todayStart = moment().startOf("day").format("YYYY-MM-DD");
   const oneYearAgo = moment().subtract(365, "days").format("YYYY-MM-DD");
+  const thirtyDaysAgo = moment().subtract(30, "days").format("YYYY-MM-DD");
   const navigate = useNavigate();
 
   useEffect(() => { loadData(); }, []);
 
-  const loadData = async (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-      try {
-        await Promise.all([
-          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: oneYearAgo }),
-          base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
-        ]);
-      } catch (e) { console.error("Sync error:", e); }
-    } else {
-      setLoading(true);
-    }
+  const loadEntityData = async () => {
     const [u, ex, re, v, wv, s, j, sup, ex30] = await Promise.all([
       base44.auth.me(),
       base44.entities.Exchange.filter({ logged_at: { $gte: todayStart } }, "-logged_at", 20),
@@ -74,8 +64,24 @@ export default function Home() {
     setJournal(j);
     setSupplies(sup);
     setExchanges30(ex30);
-    setLoading(false);
-    setRefreshing(false);
+  };
+
+  const loadData = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+      // Load entity data immediately (instant), then sync in background
+      await loadEntityData();
+      setRefreshing(false);
+      Promise.all([
+        base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: thirtyDaysAgo }),
+        base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
+      ]).then(() => loadEntityData())
+        .catch(e => console.error("Sync error:", e));
+    } else {
+      setLoading(true);
+      await loadEntityData();
+      setLoading(false);
+    }
   };
 
   const handleLogExchange = async (data) => {

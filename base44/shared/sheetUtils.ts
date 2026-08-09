@@ -16,14 +16,13 @@ export const parseSheetDate = (s) => {
 // Exchange/VitalSign logged timestamp -> local calendar date (America/Los_Angeles).
 // Stored timestamps are inconsistent: form entries are UTC ("...Z"), imported
 // records are bare local strings whose date part is already the local date.
+const laFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'
+});
 export const laDate = (iso) => {
   if (!iso) return null;
   if (iso.includes('Z') || /[+-]\d{2}:\d{2}$/.test(iso)) {
-    try {
-      return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'
-      }).format(new Date(iso));
-    } catch { return iso.slice(0, 10); }
+    try { return laFormatter.format(new Date(iso)); } catch { return iso.slice(0, 10); }
   }
   return iso.slice(0, 10);
 };
