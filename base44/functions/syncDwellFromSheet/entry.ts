@@ -28,14 +28,13 @@ const parseHMM = (s) => {
 // Exchange logged_at -> local calendar date in the patient's timezone (America/Los_Angeles).
 // Stored timestamps are inconsistent: form entries are UTC ("...Z"), imported records are
 // bare local strings (no offset) whose date part is already the local date.
+const laFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'
+});
 const laDate = (iso) => {
   if (!iso) return null;
   if (iso.includes('Z') || /[+-]\d{2}:\d{2}$/.test(iso)) {
-    try {
-      return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'
-      }).format(new Date(iso));
-    } catch { return iso.slice(0, 10); }
+    try { return laFormatter.format(new Date(iso)); } catch { return iso.slice(0, 10); }
   }
   return iso.slice(0, 10);
 };
@@ -73,8 +72,9 @@ Deno.serve(async (req) => {
       };
     }
 
-    const exchanges = await base44.asServiceRole.entities.Exchange.list('-created_date', 500);
+    const exchanges = await base44.asServiceRole.entities.Exchange.filter({ logged_at: { $gte: startDate } }, '-created_date', 500);
 
+    const toUpdate = [];
     const updated = [];
     const unmatched = [];
     for (const ex of exchanges) {
@@ -92,8 +92,12 @@ Deno.serve(async (req) => {
       if (needLost && sv.lost_dwell != null) patch.lost_dwell = sv.lost_dwell;
       if (!Object.keys(patch).length) continue;
 
-      await base44.asServiceRole.entities.Exchange.update(ex.id, patch);
+      toUpdate.push({ id: ex.id, ...patch });
       updated.push({ id: ex.id, date: d, ...patch });
+    }
+
+    if (toUpdate.length) {
+      await base44.asServiceRole.entities.Exchange.bulkUpdate(toUpdate);
     }
 
     return Response.json({
