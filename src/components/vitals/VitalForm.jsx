@@ -21,7 +21,7 @@ export default function VitalForm({ onSubmit, onCancel, initial }) {
       systolic_bp: form.systolic_bp ? parseInt(form.systolic_bp) : null,
       diastolic_bp: form.diastolic_bp ? parseInt(form.diastolic_bp) : null,
       notes: form.notes,
-      measured_at: initial?.measured_at || new Date().toISOString(),
+      measured_at: initial?.measured_at || new Date().toLocaleDateString('en-CA'),
     });
     setSaving(false);
   };

@@ -38,12 +38,15 @@ export default async function(req) {
       sheetMap[date] = { weight_lbs: weight, systolic_bp: sys, diastolic_bp: dia };
     }
 
-    // Fetch existing vitals in range and index by measured_at date
+    // Fetch existing vitals in range and group by measured_at date (handle duplicates)
     const vitals = await base44.asServiceRole.entities.VitalSign.filter({ measured_at: { $gte: startDate } }, '-created_date', 500);
     const existingByDate = {};
     for (const v of vitals) {
       const d = laDate(v.measured_at || v.created_date);
-      if (d) existingByDate[d] = v;
+      if (d) {
+        if (!existingByDate[d]) existingByDate[d] = [];
+        existingByDate[d].push(v);
+      }
     }
 
     const toCreate = [];
@@ -53,9 +56,9 @@ export default async function(req) {
 
     for (const [date, sv] of Object.entries(sheetMap)) {
       if (date < startDate) continue;
-      const existing = existingByDate[date];
+      const existingRecords = existingByDate[date];
 
-      if (!existing) {
+      if (!existingRecords || existingRecords.length === 0) {
         toCreate.push({
           measured_at: date,
           weight_lbs: sv.weight_lbs,
@@ -63,18 +66,21 @@ export default async function(req) {
           diastolic_bp: sv.diastolic_bp,
         });
       } else {
-        const patch = {};
-        if (onlyNulls) {
-          if (existing.weight_lbs == null && sv.weight_lbs != null) patch.weight_lbs = sv.weight_lbs;
-          if (existing.systolic_bp == null && sv.systolic_bp != null) patch.systolic_bp = sv.systolic_bp;
-          if (existing.diastolic_bp == null && sv.diastolic_bp != null) patch.diastolic_bp = sv.diastolic_bp;
-        } else {
-          if (sv.weight_lbs != null && existing.weight_lbs !== sv.weight_lbs) patch.weight_lbs = sv.weight_lbs;
-          if (sv.systolic_bp != null && existing.systolic_bp !== sv.systolic_bp) patch.systolic_bp = sv.systolic_bp;
-          if (sv.diastolic_bp != null && existing.diastolic_bp !== sv.diastolic_bp) patch.diastolic_bp = sv.diastolic_bp;
+        // Update ALL records for this date (handles duplicates)
+        for (const existing of existingRecords) {
+          const patch = {};
+          if (onlyNulls) {
+            if (existing.weight_lbs == null && sv.weight_lbs != null) patch.weight_lbs = sv.weight_lbs;
+            if (existing.systolic_bp == null && sv.systolic_bp != null) patch.systolic_bp = sv.systolic_bp;
+            if (existing.diastolic_bp == null && sv.diastolic_bp != null) patch.diastolic_bp = sv.diastolic_bp;
+          } else {
+            if (sv.weight_lbs != null && existing.weight_lbs !== sv.weight_lbs) patch.weight_lbs = sv.weight_lbs;
+            if (sv.systolic_bp != null && existing.systolic_bp !== sv.systolic_bp) patch.systolic_bp = sv.systolic_bp;
+            if (sv.diastolic_bp != null && existing.diastolic_bp !== sv.diastolic_bp) patch.diastolic_bp = sv.diastolic_bp;
+          }
+          if (!Object.keys(patch).length) continue;
+          toUpdate.push({ id: existing.id, ...patch });
         }
-        if (!Object.keys(patch).length) continue;
-        toUpdate.push({ id: existing.id, ...patch });
       }
     }
 
