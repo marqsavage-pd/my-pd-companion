@@ -6,7 +6,7 @@ const formatVitalDate = (v) => {
   const ts = v.measured_at || v.created_date;
   const m = parseTimestamp(ts);
   if (!m) return "—";
-  return tsHasTime(ts) ? m.format("MMM D, YYYY · HH:mm") : m.format("MMM D, YYYY");
+  return tsHasTime(ts) ? m.format("DD-MMM-YY · HH:mm") : m.format("DD-MMM-YY");
 };
 
 export default function VitalCard({ vital, onEdit, onDelete }) {

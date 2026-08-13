@@ -68,7 +68,7 @@ export default function Vitals() {
           v.weight_lbs ? `${v.weight_lbs} lbs` : "",
           v.systolic_bp ? `${v.systolic_bp}/${v.diastolic_bp} mmHg` : "",
           v.notes,
-          eventDate(v).format("MMM D, YYYY HH:mm"),
+          eventDate(v).format("DD-MMM-YY HH:mm"),
         ].filter(Boolean).join(" ").toLowerCase().includes(q);
       })
     : null;
@@ -93,7 +93,7 @@ export default function Vitals() {
       <section key={day}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-muted-foreground">
-            {moment(day).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "dddd", sameElse: "MMM D, YYYY" })}
+            {moment(day).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "dddd", sameElse: "DD-MMM-YY" })}
           </h3>
           {dayDelta !== 0 && (
             <span className="text-xs font-medium text-primary">
@@ -148,7 +148,7 @@ export default function Vitals() {
             {latest.systolic_bp ? (
               <p className="text-2xl font-bold">{latest.systolic_bp}/{latest.diastolic_bp} <span className="text-sm font-medium text-muted-foreground">mmHg</span></p>
             ) : <p className="text-2xl font-bold text-muted-foreground">—</p>}
-            <p className="text-xs text-muted-foreground mt-1">{latest.measured_at && latest.measured_at.length > 10 ? eventDate(latest).format("MMM D, HH:mm") : eventDate(latest).format("MMM D")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{latest.measured_at && latest.measured_at.length > 10 ? eventDate(latest).format("DD-MMM-YY, HH:mm") : eventDate(latest).format("DD-MMM-YY")}</p>
           </div>
         </div>
       )}

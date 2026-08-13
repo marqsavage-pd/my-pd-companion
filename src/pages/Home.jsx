@@ -163,8 +163,8 @@ export default function Home() {
   const formatSessionTime = (e, sep = ", ") => {
     const ts = e.logged_at || e.created_date;
     if (!ts) return "—";
-    if (ts.length <= 10) return moment(ts).format("MMM D");
-    return /[Zz]$|[+-]\d{2}:\d{2}$/.test(ts) ? moment.utc(ts).local().format(`MMM D${sep}HH:mm`) : moment(ts).format(`MMM D${sep}HH:mm`);
+    if (ts.length <= 10) return moment(ts).format("DD-MMM-YY");
+    return /[Zz]$|[+-]\d{2}:\d{2}$/.test(ts) ? moment.utc(ts).local().format(`DD-MMM-YY${sep}HH:mm`) : moment(ts).format(`DD-MMM-YY${sep}HH:mm`);
   };
 
   const greeting = () => {

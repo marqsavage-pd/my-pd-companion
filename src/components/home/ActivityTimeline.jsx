@@ -6,7 +6,7 @@ const fmtTime = (ts) => {
   if (!ts) return "";
   const m = parseTimestamp(ts);
   if (!m) return "";
-  return ts.length <= 10 ? m.format("MMM D") : m.format("MMM D · HH:mm");
+  return ts.length <= 10 ? m.format("DD-MMM-YY") : m.format("DD-MMM-YY · HH:mm");
 };
 
 export default function ActivityTimeline({ exchanges = [], symptoms = [], journal = [] }) {

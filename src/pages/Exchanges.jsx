@@ -84,7 +84,7 @@ export default function Exchanges() {
           `${e.dextrose_concentration}% dextrose`,
           e.solution_appearance,
           e.notes,
-          eventDate(e).format("MMM D, YYYY HH:mm"),
+          eventDate(e).format("DD-MMM-YY HH:mm"),
         ].filter(Boolean).join(" ").toLowerCase().includes(q);
       })
     : null;
@@ -115,7 +115,7 @@ export default function Exchanges() {
       <section key={day}>
         <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <h3 className="text-sm font-semibold text-muted-foreground">
-            {moment(day).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "dddd", sameElse: "MMM D, YYYY" })}
+            {moment(day).calendar(null, { sameDay: "[Today]", lastDay: "[Yesterday]", lastWeek: "dddd", sameElse: "DD-MMM-YY" })}
           </h3>
           <div className="flex items-center gap-3 text-xs font-medium">
             <span className="text-primary">UF: {dayUF > 0 ? "+" : ""}{dayUF} mL</span>
@@ -151,7 +151,7 @@ export default function Exchanges() {
       <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5">
         <p className="text-xs font-semibold text-primary uppercase tracking-wider">Last Session UF</p>
         <p className="text-3xl font-bold text-primary mt-1">{lastUF > 0 ? "+" : ""}{lastUF} <span className="text-lg font-medium">mL</span></p>
-        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${eventDate(lastSession).format("MMM D, HH:mm")}` : "No sessions logged yet"}</p>
+        <p className="text-xs text-muted-foreground mt-2">{lastSession ? `Previous session · ${eventDate(lastSession).format("DD-MMM-YY, HH:mm")}` : "No sessions logged yet"}</p>
         <div className="flex gap-6 mt-3 pt-3 border-t border-primary/15">
           <div>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Avg Dwell</p>
