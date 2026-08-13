@@ -81,6 +81,12 @@ export default function Home() {
       setLoading(true);
       await loadEntityData();
       setLoading(false);
+      // Also sync from sheet on initial load so data is always current
+      Promise.all([
+        base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: thirtyDaysAgo }),
+        base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
+      ]).then(() => loadEntityData())
+        .catch(e => console.error("Sync error:", e));
     }
   };
 
