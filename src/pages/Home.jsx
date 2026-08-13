@@ -185,7 +185,7 @@ export default function Home() {
           <h1 className="font-heading text-2xl md:text-3xl font-bold">
             {greeting()}{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
           </h1>
-          <p className="text-muted-foreground mt-1">{moment().format("dddd, MMMM D")}</p>
+          <p className="text-muted-foreground mt-1">{moment().format("dddd, DD-MMM-YY")}</p>
         </div>
         <StreakBadge days={streakDays} />
       </div>
