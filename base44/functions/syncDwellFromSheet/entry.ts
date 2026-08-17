@@ -1,9 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
-// The patient's peritoneal dialysis tracking spreadsheet (2026 tab).
+// The patient's peritoneal dialysis tracking spreadsheet (monthly tabs: May-26, Jun-26, ...).
 // Column A = date (DD-MMM-YY), M = Avg Dwell (H:MM), N = Lost Dwell (H:MM).
 const SPREADSHEET_ID = "1NqLgMVsjvpniEwrDGaN1bZhl0iz83N5EZA1kKkZ0sKA";
-const SHEET = "2026";
+const SHEETS = ["May-26", "Jun-26", "Jul-26", "Aug-26", "Sep-26", "Oct-26", "Nov-26", "Dec-26"];
 
 const MONTHS = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
 
@@ -51,25 +51,27 @@ Deno.serve(async (req) => {
     const onlyNulls = body.only_nulls !== false; // default: only fill gaps, don't overwrite
 
     const { accessToken } = await base44.asServiceRole.connectors.getConnection("googlesheets");
-    const range = `${SHEET}!A1:N400`;
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`;
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-    const data = await res.json();
-    if (!res.ok) return Response.json({ error: 'Sheets API error', details: data }, { status: 502 });
 
-    const rows = data.values || [];
     // Map sheet date -> { dwell_hours (h), lost_dwell (min) }
     const sheetMap = {};
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      const date = parseSheetDate(row[0]);
-      if (!date || date < startDate) continue;
-      const dwellMin = parseHMM(row[12]); // column M
-      const lostMin = parseHMM(row[13]);  // column N
-      sheetMap[date] = {
-        dwell_hours: dwellMin != null ? Math.round((dwellMin / 60) * 1000) / 1000 : null,
-        lost_dwell: lostMin
-      };
+    for (const sheetName of SHEETS) {
+      const range = `'${sheetName}'!A1:N400`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+      if (!res.ok) continue; // skip missing/empty tabs
+      const data = await res.json();
+      const rows = data.values || [];
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const date = parseSheetDate(row[0]);
+        if (!date || date < startDate) continue;
+        const dwellMin = parseHMM(row[12]); // column M
+        const lostMin = parseHMM(row[13]);  // column N
+        sheetMap[date] = {
+          dwell_hours: dwellMin != null ? Math.round((dwellMin / 60) * 1000) / 1000 : null,
+          lost_dwell: lostMin
+        };
+      }
     }
 
     const exchanges = await base44.asServiceRole.entities.Exchange.filter({ logged_at: { $gte: startDate } }, '-created_date', 500);
