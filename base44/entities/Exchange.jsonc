@@ -11,11 +11,12 @@
     },
     "dextrose_concentration": {
       "type": "number",
-      "enum": [
-        1.5,
-        2.5,
-        4.25
-      ]
+      "description": "Effective dextrose concentration (%) \u2014 single value or average of a blend"
+    },
+    "dextrose_blend": {
+      "type": "string",
+      "description": "Components of a mixed dialysate, e.g. '1.5+2.5'",
+      "pattern": "^\\d+(\\.\\d+)?\\+\\d+(\\.\\d+)?$"
     },
     "fill_volume": {
       "type": "number",

@@ -8,7 +8,6 @@ import moment from "moment";
 export default function ExchangeForm({ onSubmit, onCancel, initial }) {
   const [form, setForm] = useState({
     modality: initial?.modality || "capd",
-    dextrose_concentration: initial?.dextrose_concentration ?? 1.5,
     fill_volume: initial?.fill_volume ?? 2000,
     drain_volume: initial?.drain_volume ?? "",
     dwell_hours: initial?.dwell_hours ?? "",
@@ -19,7 +18,15 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
       ? moment(initial.logged_at).format("YYYY-MM-DDTHH:mm")
       : moment().format("YYYY-MM-DDTHH:mm"),
   });
+  const [selectedConcentrations, setSelectedConcentrations] = useState(() => {
+    if (initial?.dextrose_blend) return initial.dextrose_blend.split("+").map(Number);
+    return [initial?.dextrose_concentration ?? 1.5];
+  });
   const [saving, setSaving] = useState(false);
+
+  const effectiveConc = selectedConcentrations.length === 2
+    ? Math.round((selectedConcentrations.reduce((a, b) => a + b, 0) / 2) * 1000) / 1000
+    : selectedConcentrations[0];
 
   const drain = parseFloat(form.drain_volume) || 0;
   const fill = parseFloat(form.fill_volume) || 0;
@@ -30,6 +37,10 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
     setSaving(true);
     await onSubmit({
       ...form,
+      dextrose_concentration: effectiveConc,
+      dextrose_blend: selectedConcentrations.length === 2
+        ? [...selectedConcentrations].sort((a, b) => a - b).join("+")
+        : null,
       fill_volume: fill,
       drain_volume: drain,
       ultrafiltration: uf,
@@ -83,21 +94,35 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">Dextrose Concentration</label>
+        <label className="block text-sm font-medium mb-2">Dextrose Concentration <span className="text-muted-foreground font-normal">(tap up to 2 to mix)</span></label>
         <div className="flex gap-2">
           {concentrations.map(c => (
             <button
               key={c}
               type="button"
-              onClick={() => setForm({ ...form, dextrose_concentration: c })}
+              onClick={() => {
+                if (selectedConcentrations.includes(c)) {
+                  if (selectedConcentrations.length === 1) return;
+                  setSelectedConcentrations(selectedConcentrations.filter(x => x !== c));
+                } else if (selectedConcentrations.length === 2) {
+                  setSelectedConcentrations([selectedConcentrations[0], c]);
+                } else {
+                  setSelectedConcentrations([...selectedConcentrations, c]);
+                }
+              }}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                form.dextrose_concentration === c ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground"
+                selectedConcentrations.includes(c) ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground"
               }`}
             >
               {c}%
             </button>
           ))}
         </div>
+        {selectedConcentrations.length === 2 && (
+          <p className="text-xs text-primary mt-2 font-medium">
+            Mixed: {[...selectedConcentrations].sort((a, b) => a - b).join(" + ")}% → effective {effectiveConc}%
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
