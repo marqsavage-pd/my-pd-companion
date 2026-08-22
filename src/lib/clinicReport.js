@@ -17,9 +17,9 @@ const fmtDate = (ts) => ts ? moment.utc(ts).local().format("MMM D, YYYY HH:mm") 
 async function buildReportDoc(user, daysWindow = 30) {
   const since = moment().subtract(daysWindow, "days").startOf("day").toISOString();
   const [exchanges, vitals, symptoms, notes, labs] = await Promise.all([
-    base44.entities.Exchange.filter({ logged_at: { $gte: since } }, "logged_at", 500),
-    base44.entities.VitalSign.filter({ measured_at: { $gte: since } }, "measured_at", 500),
-    base44.entities.Symptom.filter({ logged_at: { $gte: since } }, "logged_at", 500),
+    base44.entities.Exchange.filter({ logged_at: { $gte: since } }, "-logged_at", 500),
+    base44.entities.VitalSign.filter({ measured_at: { $gte: since } }, "-measured_at", 500),
+    base44.entities.Symptom.filter({ logged_at: { $gte: since } }, "-logged_at", 500),
     base44.entities.AppointmentNote.list("-created_date", 500),
     base44.entities.LabResult.list("-date", 100),
   ]);

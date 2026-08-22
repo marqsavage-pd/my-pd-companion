@@ -25,9 +25,9 @@ export const labFields = [
 export async function gatherReportData(base44, userId, daysWindow = 30) {
   const since = new Date(Date.now() - daysWindow * 86400000).toISOString();
   const [exchanges, vitals, symptoms, labs, notes] = await Promise.all([
-    base44.asServiceRole.entities.Exchange.filter({ logged_at: { $gte: since } }, "logged_at", 500),
-    base44.asServiceRole.entities.VitalSign.filter({ measured_at: { $gte: since } }, "measured_at", 500),
-    base44.asServiceRole.entities.Symptom.filter({ logged_at: { $gte: since } }, "logged_at", 500),
+    base44.asServiceRole.entities.Exchange.filter({ logged_at: { $gte: since } }, "-logged_at", 500),
+    base44.asServiceRole.entities.VitalSign.filter({ measured_at: { $gte: since } }, "-measured_at", 500),
+    base44.asServiceRole.entities.Symptom.filter({ logged_at: { $gte: since } }, "-logged_at", 500),
     base44.asServiceRole.entities.LabResult.filter({ created_by_id: userId }, "-date", 100),
     base44.asServiceRole.entities.AppointmentNote.filter({ created_by_id: userId }, "-created_date", 500),
   ]);
