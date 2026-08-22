@@ -22,7 +22,7 @@ export const labFields = [
   { key: "egfr", label: "eGFR", unit: "mL/min", low: 0, high: 15 },
 ];
 
-export async function gatherReportData(base44, userId, daysWindow = 365) {
+export async function gatherReportData(base44, userId, daysWindow = 30) {
   const since = new Date(Date.now() - daysWindow * 86400000).toISOString();
   const [exchanges, vitals, symptoms, labs, notes] = await Promise.all([
     base44.asServiceRole.entities.Exchange.filter({ logged_at: { $gte: since } }, "logged_at", 500),
