@@ -128,6 +128,27 @@ export default function ClinicReportView({ data }) {
         )}
       </section>
 
+      {/* Full exchange log */}
+      <section>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Exchange Log · {exchanges.length} sessions</h2>
+        {exchanges.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No exchanges recorded in this window.</p>
+        ) : (
+          <div className="space-y-1 text-sm">
+            {exchanges.map((e, i) => (
+              <div key={i} className="flex flex-wrap gap-x-3 gap-y-0.5 border-b py-1">
+                <span className="text-muted-foreground w-24">{fmtDate(e.logged_at)}</span>
+                <span className="font-medium">{e.modality?.toUpperCase()}</span>
+                <span>{e.dextrose_blend ? `${e.dextrose_blend} (eff ${e.dextrose_concentration}%)` : `${e.dextrose_concentration}%`}</span>
+                <span className="text-muted-foreground">Fill {e.fill_volume || 0} / Drain {e.drain_volume || 0}</span>
+                <span className={e.ultrafiltration > 0 ? "text-emerald-600" : "text-muted-foreground"}>UF {e.ultrafiltration || 0} mL</span>
+                <span className={e.solution_appearance === "cloudy" || e.solution_appearance === "bloody" ? "text-destructive font-medium" : "text-muted-foreground"}>{e.solution_appearance || "—"}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* Notable exchanges */}
       <section>
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Notable Exchanges</h2>
