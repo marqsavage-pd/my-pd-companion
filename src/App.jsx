@@ -26,6 +26,8 @@ import Journal from '@/pages/Journal';
 import Inventory from '@/pages/Inventory';
 import Travel from '@/pages/Travel';
 import Notes from '@/pages/Notes';
+import Labs from '@/pages/Labs';
+import SharedReportView from '@/pages/SharedReportView';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,6 +55,7 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/shared/:token" element={<SharedReportView />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
@@ -65,6 +68,7 @@ const AuthenticatedApp = () => {
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/travel" element={<Travel />} />
           <Route path="/notes" element={<Notes />} />
+          <Route path="/labs" element={<Labs />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

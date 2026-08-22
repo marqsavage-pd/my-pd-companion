@@ -1,0 +1,33 @@
+{
+  "name": "SharedReport",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Unique share token for the secure link"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the shared link expires"
+    }
+  },
+  "required": [
+    "token",
+    "expires_at"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

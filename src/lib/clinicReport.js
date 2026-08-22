@@ -14,13 +14,14 @@ const symptomLabels = {
 const fmtDate = (ts) => ts ? moment.utc(ts).local().format("MMM D, YYYY HH:mm") : "—";
 
 // Generate and download a 30-day clinical snapshot PDF for the clinic visit.
-export async function generateClinicReport(user) {
+async function buildReportDoc(user) {
   const since = moment().subtract(30, "days").startOf("day").toISOString();
-  const [exchanges, vitals, symptoms, notes] = await Promise.all([
+  const [exchanges, vitals, symptoms, notes, labs] = await Promise.all([
     base44.entities.Exchange.filter({ logged_at: { $gte: since } }, "logged_at", 500),
     base44.entities.VitalSign.filter({ measured_at: { $gte: since } }, "measured_at", 500),
     base44.entities.Symptom.filter({ logged_at: { $gte: since } }, "logged_at", 500),
     base44.entities.AppointmentNote.list("-created_date", 500),
+    base44.entities.LabResult.list("-date", 100),
   ]);
 
   const flagged = notes.filter(n => n.flag_for_review && !n.resolved);
@@ -106,6 +107,31 @@ export async function generateClinicReport(user) {
   row("Symptoms logged", symptoms.length);
   row("Cloudy effluent events", cloudyCount);
 
+  // Lab results
+  heading("Latest Lab Results");
+  const latestLab = labs[0];
+  const prevLab = labs[1];
+  if (!latestLab) {
+    para("No lab results recorded.", { size: 10 });
+  } else {
+    row("Date", moment(latestLab.date).format("MMM D, YYYY"));
+    const labFields = [
+      ["Creatinine", "creatinine", "mg/dL"], ["BUN", "bun", "mg/dL"],
+      ["Potassium", "potassium", "mEq/L"], ["Hemoglobin", "hemoglobin", "g/dL"],
+      ["Calcium", "calcium", "mg/dL"], ["Phosphorus", "phosphorus", "mg/dL"],
+      ["PTH", "pth", "pg/mL"], ["Albumin", "albumin", "g/dL"],
+      ["eGFR", "egfr", "mL/min"],
+    ];
+    labFields.forEach(([label, key, unit]) => {
+      if (latestLab[key] != null) {
+        const val = `${latestLab[key]} ${unit}`;
+        const delta = prevLab && prevLab[key] != null ? latestLab[key] - prevLab[key] : null;
+        row(label, delta != null ? `${val} (${delta > 0 ? "+" : ""}${delta.toFixed(1)} from prev)` : val);
+      }
+    });
+    if (latestLab.notes) para(`Notes: ${latestLab.notes}`, { size: 9 });
+  }
+
   // Flagged notes
   heading("Flagged for Clinic Review");
   if (flagged.length === 0) {
@@ -154,5 +180,15 @@ export async function generateClinicReport(user) {
     });
   }
 
+  return doc;
+}
+
+export async function generateClinicReport(user) {
+  const doc = await buildReportDoc(user);
   doc.save(`clinical-snapshot-${moment().format("YYYY-MM-DD")}.pdf`);
+}
+
+export async function generateClinicReportBlob(user) {
+  const doc = await buildReportDoc(user);
+  return doc.output("blob");
 }

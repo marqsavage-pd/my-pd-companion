@@ -1,0 +1,33 @@
+{
+  "name": "ClinicContact",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Contact name (e.g. Dr. Smith, Renal Clinic)"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email address to send reports to"
+    }
+  },
+  "required": [
+    "name",
+    "email"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

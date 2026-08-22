@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
-import { Droplets, HeartPulse, Activity, BookOpen, Plus, ArrowRight, AlertTriangle, ExternalLink, StickyNote, MessageCircleQuestion, Package } from "lucide-react";
+import { Droplets, HeartPulse, Activity, BookOpen, Plus, ArrowRight, AlertTriangle, ExternalLink, StickyNote, MessageCircleQuestion, Package, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +13,7 @@ import WeightSparkline from "@/components/home/WeightSparkline";
 import RefreshButton from "@/components/home/RefreshButton";
 import ActivityTimeline from "@/components/home/ActivityTimeline";
 import EmptyState from "@/components/home/EmptyState";
+import ShareReportSheet from "@/components/reports/ShareReportSheet";
 import moment from "moment";
 import { parseTimestamp } from "@/lib/dateUtils";
 
@@ -34,6 +35,7 @@ export default function Home() {
   const [noteCategory, setNoteCategory] = useState("question");
   const [savingNote, setSavingNote] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [user, setUser] = useState(null);
 
   const todayStart = moment().startOf("day").format("YYYY-MM-DD");
@@ -75,6 +77,7 @@ export default function Home() {
       Promise.all([
         base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: thirtyDaysAgo }),
         base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
+        base44.functions.invoke("syncLabResultsFromSheet", { only_nulls: false }),
       ]).then(() => loadEntityData())
         .catch(e => console.error("Sync error:", e));
     } else {
@@ -85,6 +88,7 @@ export default function Home() {
       Promise.all([
         base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: thirtyDaysAgo }),
         base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
+        base44.functions.invoke("syncLabResultsFromSheet", { only_nulls: false }),
       ]).then(() => loadEntityData())
         .catch(e => console.error("Sync error:", e));
     }
@@ -307,6 +311,18 @@ export default function Home() {
         <div className="flex-1 h-px bg-border" />
       </div>
 
+      <button onClick={() => setShowShareSheet(true)}
+        className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 hover:shadow-md transition-all w-full">
+        <div className="flex items-center gap-3">
+          <Share2 size={20} className="text-primary" />
+          <div className="text-left">
+            <p className="text-sm font-semibold">Share with Clinic</p>
+            <p className="text-xs text-muted-foreground">Email PDF or copy a secure link</p>
+          </div>
+        </div>
+        <ArrowRight size={16} className="text-muted-foreground" />
+      </button>
+
       <SupplyAlert supplies={supplies} />
 
       {/* Order supplies */}
@@ -373,6 +389,8 @@ export default function Home() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <ShareReportSheet open={showShareSheet} onOpenChange={setShowShareSheet} user={user} />
     </div>
   );
 }

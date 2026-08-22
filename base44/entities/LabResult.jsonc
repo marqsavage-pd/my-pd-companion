@@ -1,0 +1,76 @@
+{
+  "name": "LabResult",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the lab was drawn"
+    },
+    "creatinine": {
+      "type": "number",
+      "description": "Serum creatinine (mg/dL)"
+    },
+    "bun": {
+      "type": "number",
+      "description": "Blood urea nitrogen (mg/dL)"
+    },
+    "potassium": {
+      "type": "number",
+      "description": "Potassium (mEq/L)"
+    },
+    "hemoglobin": {
+      "type": "number",
+      "description": "Hemoglobin (g/dL)"
+    },
+    "calcium": {
+      "type": "number",
+      "description": "Calcium (mg/dL)"
+    },
+    "phosphorus": {
+      "type": "number",
+      "description": "Phosphorus (mg/dL)"
+    },
+    "pth": {
+      "type": "number",
+      "description": "Parathyroid hormone (pg/mL)"
+    },
+    "albumin": {
+      "type": "number",
+      "description": "Albumin (g/dL)"
+    },
+    "egfr": {
+      "type": "number",
+      "description": "Estimated glomerular filtration rate (mL/min/1.73m\u00b2)"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
