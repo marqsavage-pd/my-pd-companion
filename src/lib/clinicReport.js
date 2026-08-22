@@ -14,8 +14,8 @@ const symptomLabels = {
 const fmtDate = (ts) => ts ? moment.utc(ts).local().format("MMM D, YYYY HH:mm") : "—";
 
 // Generate and download a clinical snapshot PDF for the clinic visit.
-async function buildReportDoc(user) {
-  const since = moment().subtract(30, "days").startOf("day").toISOString();
+async function buildReportDoc(user, daysWindow = 30) {
+  const since = moment().subtract(daysWindow, "days").startOf("day").toISOString();
   const [exchanges, vitals, symptoms, notes, labs] = await Promise.all([
     base44.entities.Exchange.filter({ logged_at: { $gte: since } }, "logged_at", 500),
     base44.entities.VitalSign.filter({ measured_at: { $gte: since } }, "measured_at", 500),
@@ -82,7 +82,7 @@ async function buildReportDoc(user) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(110, 110, 120);
-  doc.text(`Generated ${moment().format("MMM D, YYYY HH:mm")} · 30-day window`, marginX, y);
+  doc.text(`Generated ${moment().format("MMM D, YYYY HH:mm")} · ${daysWindow}-day window`, marginX, y);
   y += 22;
 
   // Patient summary
@@ -99,7 +99,7 @@ async function buildReportDoc(user) {
   const avgDia = bps.length ? Math.round(bps.reduce((a, v) => a + v.diastolic_bp, 0) / bps.length) : "—";
   const cloudyCount = exchanges.filter(e => e.solution_appearance === "cloudy").length;
 
-  heading("30-Day Summary");
+  heading(`${daysWindow}-Day Summary`);
   row("Exchanges logged", exchanges.length);
   row("Total ultrafiltration", `${Math.round(totalUF)} mL`);
   row("Avg weight", avgWeight === "—" ? "—" : `${avgWeight} lbs`);
@@ -194,12 +194,12 @@ async function buildReportDoc(user) {
   return doc;
 }
 
-export async function generateClinicReport(user) {
-  const doc = await buildReportDoc(user);
+export async function generateClinicReport(user, daysWindow = 30) {
+  const doc = await buildReportDoc(user, daysWindow);
   doc.save(`clinical-snapshot-${moment().format("YYYY-MM-DD")}.pdf`);
 }
 
-export async function generateClinicReportBlob(user) {
-  const doc = await buildReportDoc(user);
+export async function generateClinicReportBlob(user, daysWindow = 30) {
+  const doc = await buildReportDoc(user, daysWindow);
   return doc.output("blob");
 }

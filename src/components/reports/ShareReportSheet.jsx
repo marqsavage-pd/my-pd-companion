@@ -18,6 +18,7 @@ export default function ShareReportSheet({ open, onOpenChange, user }) {
   const [creatingLink, setCreatingLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [windowDays, setWindowDays] = useState(30);
 
   useEffect(() => {
     if (open) loadContacts();
@@ -53,7 +54,7 @@ export default function ShareReportSheet({ open, onOpenChange, user }) {
     setSending(true);
     setError("");
     try {
-      const blob = await generateClinicReportBlob(user);
+      const blob = await generateClinicReportBlob(user, windowDays);
       const file = new File([blob], `clinical-snapshot-${new Date().toISOString().slice(0, 10)}.pdf`, { type: "application/pdf" });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       await base44.integrations.Core.SendEmail({
@@ -73,7 +74,7 @@ export default function ShareReportSheet({ open, onOpenChange, user }) {
     setCreatingLink(true);
     setError("");
     try {
-      const res = await base44.functions.invoke("createSharedReport", { days: 7 });
+      const res = await base44.functions.invoke("createSharedReport", { days: 7, window_days: windowDays });
       const url = `${window.location.origin}/shared/${res.data.token}`;
       setLinkUrl(url);
       try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
@@ -91,6 +92,22 @@ export default function ShareReportSheet({ open, onOpenChange, user }) {
         </DialogHeader>
 
         <div className="space-y-5">
+          {/* Window selector */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Report Window</p>
+            <div className="flex gap-2">
+              {[7, 14, 30].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setWindowDays(d)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${windowDays === d ? "bg-primary text-primary-foreground shadow-md" : "bg-secondary text-muted-foreground"}`}
+                >
+                  {d} days
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Email PDF */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium">

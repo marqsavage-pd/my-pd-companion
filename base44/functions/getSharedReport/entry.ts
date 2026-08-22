@@ -20,7 +20,8 @@ export default async function(req) {
     }
 
     // Gather the owner's report data using service role
-    const data = await gatherReportData(base44, report.created_by_id, 30);
+    const windowDays = [7, 14, 30].includes(report.window_days) ? report.window_days : 30;
+    const data = await gatherReportData(base44, report.created_by_id, windowDays);
 
     // Fetch the owner's user info for the report header
     const users = await base44.asServiceRole.entities.User.filter({ id: report.created_by_id });

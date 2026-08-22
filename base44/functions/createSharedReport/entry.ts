@@ -19,10 +19,11 @@ export default async function(req) {
 
     const body = await req.json().catch(() => ({}));
     const days = body.days || EXPIRY_DAYS;
+    const windowDays = [7, 14, 30].includes(body.window_days) ? body.window_days : 30;
     const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
     const token = generateToken();
 
-    await base44.entities.SharedReport.create({ token, expires_at: expiresAt });
+    await base44.entities.SharedReport.create({ token, expires_at: expiresAt, window_days: windowDays });
 
     return Response.json({ token, expires_at: expiresAt });
   } catch (error) {

@@ -10,6 +10,11 @@
       "type": "string",
       "format": "date-time",
       "description": "When the shared link expires"
+    },
+    "window_days": {
+      "type": "number",
+      "default": 30,
+      "description": "Report data window in days (7, 14, or 30)"
     }
   },
   "required": [
