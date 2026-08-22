@@ -11,7 +11,7 @@ const symptomLabels = {
   sleep_issues: "Sleep Issues", other: "Other",
 };
 
-const fmtDate = (ts) => ts ? moment.utc(ts).local().format("MMM D, YYYY HH:mm") : "—";
+const fmtDate = (ts) => ts ? moment(ts).format("MMM D, YYYY HH:mm") : "—";
 
 // Generate and download a clinical snapshot PDF for the clinic visit.
 async function buildReportDoc(user, daysWindow = 30) {
@@ -25,6 +25,9 @@ async function buildReportDoc(user, daysWindow = 30) {
   ]);
 
   const flagged = notes.filter(n => n.flag_for_review && !n.resolved);
+
+  // Ensure descending (newest-first) regardless of SDK sort behavior with mixed-format timestamps
+  vitals.sort((a, b) => new Date(b.measured_at || b.created_date) - new Date(a.measured_at || a.created_date));
 
   const doc = new jsPDF({ unit: "pt", format: "letter" });
   const pageW = doc.internal.pageSize.getWidth();

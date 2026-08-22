@@ -15,7 +15,9 @@ const LAB_FIELDS = [
 export default function ClinicReportView({ data }) {
   if (!data) return <p className="text-center text-muted-foreground py-8">Loading report...</p>;
 
-  const { patient, summary, exchanges, vitals, labs, latestLabs, prevLabs, flagged, generatedAt, windowDays } = data;
+  const { patient, summary, exchanges, labs, latestLabs, prevLabs, flagged, generatedAt, windowDays } = data;
+  // Ensure descending (newest-first) regardless of SDK sort behavior with mixed-format timestamps
+  const vitals = [...(data.vitals || [])].sort((a, b) => new Date(b.measured_at || b.created_date) - new Date(a.measured_at || a.created_date));
   const fmtDate = (ts) => ts ? moment(ts).format("DD-MMM-YY") : "—";
 
   return (
