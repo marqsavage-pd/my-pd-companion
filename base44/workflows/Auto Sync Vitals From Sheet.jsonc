@@ -1,0 +1,48 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/15 * * * *",
+      "one_time_date": null,
+      "timezone": "America/Los_Angeles",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "auto_sync_vitals",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_vitals": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncVitalsFromSheet",
+            "args": {
+              "start_date": "2026-01-01",
+              "only_nulls": false
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sync vitals from Google Sheet",
+            "description": "Pulls latest weight & BP into the app"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Automatically syncs daily vital signs (weight, blood pressure) from the patient's Google Sheet into the app every 15 minutes.",
+  "name": "Auto Sync Vitals From Sheet"
+}
