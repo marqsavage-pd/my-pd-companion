@@ -54,7 +54,7 @@ export default function AppLayout() {
 
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-56 flex-col border-r bg-card/50 p-4">
         <div className="mb-8 px-2">
-          <h1 className="font-heading text-xl font-bold text-foreground">PD Companion</h1>
+          <h1 className="font-heading text-xl font-bold text-foreground">PD Compass</h1>
           <p className="text-xs text-muted-foreground mt-1">Peritoneal Dialysis</p>
         </div>
         <nav className="flex flex-col gap-1 flex-1">
