@@ -27,16 +27,15 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b px-4 h-14 flex items-center justify-between">
-        <h1 className="font-heading text-lg font-semibold text-foreground">PD Companion</h1>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-secondary">
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </header>
-
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/30" onClick={() => setMobileOpen(false)}>
-          <div className="absolute top-14 right-0 w-56 bg-card border-l shadow-xl rounded-bl-2xl p-3 max-h-[calc(100vh-3.5rem)] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="md:hidden fixed inset-0 z-50 bg-black/40" onClick={() => setMobileOpen(false)}>
+          <div className="absolute bottom-0 left-0 right-0 bg-card border-t shadow-2xl rounded-t-2xl p-3 pb-20 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-2 pb-2">
+              <span className="font-heading text-base font-semibold text-foreground">Menu</span>
+              <button onClick={() => setMobileOpen(false)} className="p-2 rounded-lg hover:bg-secondary">
+                <X size={18} />
+              </button>
+            </div>
             {navItems.map(item => (
               <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${location.pathname === item.path ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
@@ -77,7 +76,7 @@ export default function AppLayout() {
         </button>
       </aside>
 
-      <main className="md:ml-56 pt-16 md:pt-0 min-h-screen">
+      <main className="md:ml-56 min-h-screen">
         <div className="max-w-4xl mx-auto p-4 md:p-8 pb-24 md:pb-8">
           <Outlet />
         </div>
@@ -85,12 +84,16 @@ export default function AppLayout() {
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t z-40">
         <div className="flex justify-around py-2">
-          {navItems.filter(i => ["/", "/exchanges", "/vitals", "/inventory", "/notes"].includes(i.path)).map(item => (
+          {navItems.filter(i => ["/", "/exchanges", "/vitals", "/notes", "/inventory"].includes(i.path)).map(item => (
             <Link key={item.path} to={item.path}
               className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg text-[10px] font-medium transition-colors ${location.pathname === item.path ? "text-primary" : "text-muted-foreground"}`}>
               <item.icon size={20} />{item.label}
             </Link>
           ))}
+          <button onClick={() => setMobileOpen(true)}
+            className="flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg text-[10px] font-medium text-muted-foreground">
+            <Menu size={20} />More
+          </button>
         </div>
       </nav>
     </div>
