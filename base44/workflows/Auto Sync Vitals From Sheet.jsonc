@@ -1,4 +1,5 @@
 {
+  "name": "Auto Sync Vitals From Sheet",
   "trigger": {
     "condition": null,
     "config": {
@@ -16,6 +17,7 @@
       "ends_after_count": null
     }
   },
+  "description": "Automatically syncs vital signs, dwell/lost-dwell, and lab results from the patient's Google Sheet into the app every 15 minutes.",
   "definition": {
     "document": {
       "dsl": "1.0.0",
@@ -34,15 +36,47 @@
               "only_nulls": false
             }
           },
+          "then": "sync_dwell",
+          "x-base44": {
+            "title": "Sync vitals (weight & BP)",
+            "description": "From Google Sheet"
+          }
+        }
+      },
+      {
+        "sync_dwell": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncDwellFromSheet",
+            "args": {
+              "start_date": "2026-01-01",
+              "only_nulls": false
+            }
+          },
+          "then": "sync_labs",
+          "x-base44": {
+            "title": "Sync dwell & lost dwell",
+            "description": "Treatment metrics into exchanges"
+          }
+        }
+      },
+      {
+        "sync_labs": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncLabResultsFromSheet",
+            "args": {
+              "start_date": "2026-01-01",
+              "only_nulls": false
+            }
+          },
           "then": "end",
           "x-base44": {
-            "title": "Sync vitals from Google Sheet",
-            "description": "Pulls latest weight & BP into the app"
+            "title": "Sync lab results",
+            "description": "From Labs tab"
           }
         }
       }
     ]
-  },
-  "description": "Automatically syncs daily vital signs (weight, blood pressure) from the patient's Google Sheet into the app every 15 minutes.",
-  "name": "Auto Sync Vitals From Sheet"
+  }
 }
