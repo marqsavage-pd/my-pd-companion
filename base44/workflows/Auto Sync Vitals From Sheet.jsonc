@@ -1,12 +1,11 @@
 {
-  "name": "Auto Sync Vitals From Sheet",
   "trigger": {
     "condition": null,
     "config": {
       "trigger_type": "scheduled",
       "events": [],
       "schedule_mode": "recurring",
-      "cron_expression": "*/15 * * * *",
+      "cron_expression": "*/5 * * * *",
       "one_time_date": null,
       "timezone": "America/Los_Angeles",
       "interval_value": null,
@@ -17,7 +16,7 @@
       "ends_after_count": null
     }
   },
-  "description": "Automatically syncs vital signs, dwell/lost-dwell, and lab results from the patient's Google Sheet into the app every 15 minutes.",
+  "name": "Auto Sync Vitals From Sheet",
   "definition": {
     "document": {
       "dsl": "1.0.0",
@@ -78,5 +77,6 @@
         }
       }
     ]
-  }
+  },
+  "description": "Automatically syncs vital signs, dwell/lost-dwell, and lab results from the patient's Google Sheet into the app every 5 minutes."
 }
