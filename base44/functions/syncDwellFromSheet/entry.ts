@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
 // The patient's peritoneal dialysis tracking spreadsheet (monthly tabs: May-26, Jun-26, ...).
-// Column A = date (DD-MMM-YY), M = Avg Dwell (H:MM), N = Lost Dwell (H:MM).
+// Columns: A=date, K=Init Drain (drain_volume), L=Total UF (ultrafiltration), M=Avg Dwell, N=Lost Dwell.
 const SPREADSHEET_ID = "1NqLgMVsjvpniEwrDGaN1bZhl0iz83N5EZA1kKkZ0sKA";
 const SHEETS = ["May-26", "Jun-26", "Jul-26", "Aug-26", "Sep-26", "Oct-26", "Nov-26", "Dec-26"];
 
@@ -65,11 +65,15 @@ Deno.serve(async (req) => {
         const row = rows[i];
         const date = parseSheetDate(row[0]);
         if (!date || date < startDate) continue;
+        const drainVol = row[10] ? parseFloat(row[10]) : null;  // column K = Init Drain
+        const totalUF = row[11] ? parseFloat(row[11]) : null;    // column L = Total UF
         const dwellMin = parseHMM(row[12]); // column M
         const lostMin = parseHMM(row[13]);  // column N
         sheetMap[date] = {
           dwell_hours: dwellMin != null ? Math.round((dwellMin / 60) * 1000) / 1000 : null,
-          lost_dwell: lostMin
+          lost_dwell: lostMin,
+          drain_volume: drainVol,
+          ultrafiltration: totalUF
         };
       }
     }
@@ -87,11 +91,15 @@ Deno.serve(async (req) => {
 
       const needDwell = onlyNulls ? ex.dwell_hours == null : true;
       const needLost = onlyNulls ? ex.lost_dwell == null : true;
-      if (!needDwell && !needLost) continue;
+      const needDrain = onlyNulls ? ex.drain_volume == null : true;
+      const needUF = onlyNulls ? ex.ultrafiltration == null : true;
+      if (!needDwell && !needLost && !needDrain && !needUF) continue;
 
       const patch = {};
       if (needDwell && sv.dwell_hours != null) patch.dwell_hours = sv.dwell_hours;
       if (needLost && sv.lost_dwell != null) patch.lost_dwell = sv.lost_dwell;
+      if (needDrain && sv.drain_volume != null) patch.drain_volume = sv.drain_volume;
+      if (needUF && sv.ultrafiltration != null) patch.ultrafiltration = sv.ultrafiltration;
       if (!Object.keys(patch).length) continue;
 
       toUpdate.push({ id: ex.id, ...patch });
