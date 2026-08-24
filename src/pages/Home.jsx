@@ -43,7 +43,12 @@ export default function Home() {
   const thirtyDaysAgo = moment().subtract(30, "days").format("YYYY-MM-DD");
   const navigate = useNavigate();
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+    // Auto-refresh every 5 minutes to pick up background sheet syncs
+    const interval = setInterval(() => loadEntityData(), 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadEntityData = async () => {
     const [u, ex, re, v, wv, s, j, sup, ex30] = await Promise.all([
