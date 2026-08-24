@@ -76,26 +76,30 @@ export default function Home() {
   const loadData = async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
-      // Load entity data immediately (instant), then sync in background
+      // Load entity data immediately (instant), then sync in background (admin only)
       await loadEntityData();
       setRefreshing(false);
-      Promise.all([
-        base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: thirtyDaysAgo }),
-        base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
-        base44.functions.invoke("syncLabResultsFromSheet", { only_nulls: false }),
-      ]).then(() => loadEntityData())
-        .catch(e => console.error("Sync error:", e));
+      if (user?.role === "admin") {
+        Promise.all([
+          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: thirtyDaysAgo }),
+          base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
+          base44.functions.invoke("syncLabResultsFromSheet", { only_nulls: false }),
+        ]).then(() => loadEntityData())
+          .catch(e => console.error("Sync error:", e));
+      }
     } else {
       setLoading(true);
       await loadEntityData();
       setLoading(false);
-      // Also sync from sheet on initial load so data is always current
-      Promise.all([
-        base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: thirtyDaysAgo }),
-        base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
-        base44.functions.invoke("syncLabResultsFromSheet", { only_nulls: false }),
-      ]).then(() => loadEntityData())
-        .catch(e => console.error("Sync error:", e));
+      // Also sync from sheet on initial load so data is always current (admin only)
+      if (user?.role === "admin") {
+        Promise.all([
+          base44.functions.invoke("syncVitalsFromSheet", { only_nulls: false, start_date: thirtyDaysAgo }),
+          base44.functions.invoke("syncDwellFromSheet", { only_nulls: true }),
+          base44.functions.invoke("syncLabResultsFromSheet", { only_nulls: false }),
+        ]).then(() => loadEntityData())
+          .catch(e => console.error("Sync error:", e));
+      }
     }
   };
 
