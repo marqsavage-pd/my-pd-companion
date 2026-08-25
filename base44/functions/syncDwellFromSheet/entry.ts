@@ -69,11 +69,29 @@ Deno.serve(async (req) => {
         const totalUF = row[11] ? parseFloat(row[11]) : null;    // column L = Total UF
         const dwellMin = parseHMM(row[12]); // column M
         const lostMin = parseHMM(row[13]);  // column N
+        // Dextrose concentration from columns H (1.5%), I (2.5%), J (4.25%)
+        const concentrations = [];
+        if (row[7] && parseFloat(row[7]) > 0) concentrations.push(1.5);
+        if (row[8] && parseFloat(row[8]) > 0) concentrations.push(2.5);
+        if (row[9] && parseFloat(row[9]) > 0) concentrations.push(4.25);
+        const dextrose_concentration = concentrations.length
+          ? Math.round((concentrations.reduce((a, b) => a + b, 0) / concentrations.length) * 1000) / 1000
+          : null;
+        const dextrose_blend = concentrations.length > 1 ? concentrations.join('+') : null;
+        const weight = row[1] ? parseFloat(row[1]) : null;
+        const bp_systolic = row[2] ? parseFloat(row[2]) : null;
+        const bp_diastolic = row[3] ? parseFloat(row[3]) : null;
+
         sheetMap[date] = {
           dwell_hours: dwellMin != null ? Math.round((dwellMin / 60) * 1000) / 1000 : null,
           lost_dwell: lostMin,
           drain_volume: drainVol,
-          ultrafiltration: totalUF
+          ultrafiltration: totalUF,
+          dextrose_concentration,
+          dextrose_blend,
+          weight,
+          bp_systolic,
+          bp_diastolic
         };
       }
     }
@@ -83,11 +101,13 @@ Deno.serve(async (req) => {
     const toUpdate = [];
     const updated = [];
     const unmatched = [];
+    const matchedDates = new Set();
     for (const ex of exchanges) {
       const d = laDate(ex.logged_at);
       if (!d || d < startDate) continue;
       const sv = sheetMap[d];
       if (!sv) { unmatched.push({ id: ex.id, date: d }); continue; }
+      matchedDates.add(d);
 
       const needDwell = onlyNulls ? ex.dwell_hours == null : true;
       const needLost = onlyNulls ? ex.lost_dwell == null : true;
@@ -110,9 +130,49 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.Exchange.bulkUpdate(toUpdate);
     }
 
+    // Create new exchange records for sheet rows with no matching app exchange
+    const toCreate = [];
+    const created = [];
+    for (const [date, sv] of Object.entries(sheetMap)) {
+      if (matchedDates.has(date)) continue;
+      if (date < startDate) continue;
+      // Only create if there's meaningful treatment data (drain > 100 mL)
+      if (sv.drain_volume == null || sv.drain_volume < 100) continue;
+      if (!sv.dextrose_concentration) continue;
+
+      const fill_volume = (sv.ultrafiltration != null)
+        ? Math.max(0, Math.round(sv.drain_volume - sv.ultrafiltration))
+        : 0;
+
+      const record = {
+        modality: 'apd',
+        dextrose_concentration: sv.dextrose_concentration,
+        fill_volume,
+        drain_volume: sv.drain_volume,
+        ultrafiltration: sv.ultrafiltration,
+        dwell_hours: sv.dwell_hours,
+        lost_dwell: sv.lost_dwell,
+        solution_appearance: 'clear',
+        logged_at: date,
+        weight: sv.weight,
+        bp_systolic: sv.bp_systolic,
+        bp_diastolic: sv.bp_diastolic
+      };
+      if (sv.dextrose_blend) record.dextrose_blend = sv.dextrose_blend;
+
+      toCreate.push(record);
+      created.push({ date, drain_volume: sv.drain_volume, ultrafiltration: sv.ultrafiltration });
+    }
+
+    if (toCreate.length) {
+      await base44.asServiceRole.entities.Exchange.bulkCreate(toCreate);
+    }
+
     return Response.json({
       updated_count: updated.length,
       updated,
+      created_count: created.length,
+      created,
       unmatched_in_range: unmatched,
       sheet_rows_in_range: Object.keys(sheetMap).length
     });
