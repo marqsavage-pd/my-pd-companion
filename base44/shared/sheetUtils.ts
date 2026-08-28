@@ -3,14 +3,21 @@
 
 const MONTHS = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
 
-// "15-Jul-26" -> "2026-07-15"
+// "15-Jul-26" -> "2026-07-15", "15-Jul" -> "2026-07-15" (assumes current year)
 export const parseSheetDate = (s) => {
   if (!s) return null;
   const parts = String(s).split('-');
-  if (parts.length !== 3) return null;
-  const [d, mon, y] = parts;
-  if (!MONTHS[mon]) return null;
-  return `20${y}-${MONTHS[mon]}-${d.padStart(2, '0')}`;
+  if (parts.length === 3) {
+    const [d, mon, y] = parts;
+    if (!MONTHS[mon]) return null;
+    return `20${y}-${MONTHS[mon]}-${d.padStart(2, '0')}`;
+  }
+  if (parts.length === 2) {
+    const [d, mon] = parts;
+    if (!MONTHS[mon]) return null;
+    return `${new Date().getFullYear()}-${MONTHS[mon]}-${d.padStart(2, '0')}`;
+  }
+  return null;
 };
 
 // Exchange/VitalSign logged timestamp -> local calendar date (America/Los_Angeles).

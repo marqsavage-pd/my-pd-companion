@@ -11,10 +11,17 @@ const MONTHS = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06
 const parseSheetDate = (s) => {
   if (!s) return null;
   const parts = String(s).split('-');
-  if (parts.length !== 3) return null;
-  const [d, mon, y] = parts;
-  if (!MONTHS[mon]) return null;
-  return `20${y}-${MONTHS[mon]}-${d.padStart(2, '0')}`;
+  if (parts.length === 3) {
+    const [d, mon, y] = parts;
+    if (!MONTHS[mon]) return null;
+    return `20${y}-${MONTHS[mon]}-${d.padStart(2, '0')}`;
+  }
+  if (parts.length === 2) {
+    const [d, mon] = parts;
+    if (!MONTHS[mon]) return null;
+    return `${new Date().getFullYear()}-${MONTHS[mon]}-${d.padStart(2, '0')}`;
+  }
+  return null;
 };
 
 // "1:18" -> 78 (total minutes)
