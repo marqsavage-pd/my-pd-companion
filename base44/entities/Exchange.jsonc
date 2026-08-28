@@ -30,6 +30,10 @@
       "type": "number",
       "description": "Net fluid removed in mL (drain - fill)"
     },
+    "tfr": {
+      "type": "number",
+      "description": "Total Fluid Removed in mL: if drain_volume < 100, equals ultrafiltration; otherwise drain_volume - 2000 + ultrafiltration"
+    },
     "dwell_hours": {
       "type": "number"
     },

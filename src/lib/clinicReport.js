@@ -177,7 +177,7 @@ async function buildReportDoc(user, daysWindow = 30) {
   } else {
     exchanges.forEach((e) => {
       const blend = e.dextrose_blend ? `${e.dextrose_blend} (eff ${e.dextrose_concentration}%)` : `${e.dextrose_concentration}%`;
-      para(`${fmtDate(e.logged_at)} · ${e.modality?.toUpperCase()} · ${blend} · Fill ${e.fill_volume || 0} / Drain ${e.drain_volume || 0} mL · UF ${e.ultrafiltration || 0} mL · ${e.solution_appearance || "—"}${e.notes ? ` · ${e.notes}` : ""}`, { size: 8 });
+      para(`${fmtDate(e.logged_at)} · ${e.modality?.toUpperCase()} · ${blend} · Fill ${e.fill_volume || 0} / Drain ${e.drain_volume || 0} mL · UF ${e.ultrafiltration || 0} mL · TFR ${e.tfr != null ? e.tfr : "—"} mL · ${e.solution_appearance || "—"}${e.notes ? ` · ${e.notes}` : ""}`, { size: 8 });
     });
   }
 

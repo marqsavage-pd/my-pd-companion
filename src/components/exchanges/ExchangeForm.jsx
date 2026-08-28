@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertTriangle } from "lucide-react";
 import moment from "moment";
+import { calcTFR } from "@/lib/exchangeUtils";
 
 export default function ExchangeForm({ onSubmit, onCancel, initial }) {
   const [form, setForm] = useState({
@@ -31,6 +32,7 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
   const drain = parseFloat(form.drain_volume) || 0;
   const fill = parseFloat(form.fill_volume) || 0;
   const uf = drain - fill;
+  const tfr = calcTFR(drain, uf);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,6 +46,7 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
       fill_volume: fill,
       drain_volume: drain,
       ultrafiltration: uf,
+      tfr,
       dwell_hours: form.dwell_hours ? parseFloat(form.dwell_hours) : null,
       lost_dwell: form.lost_dwell ? parseFloat(form.lost_dwell) : null,
       logged_at: new Date(form.logged_at).toISOString(),
@@ -174,12 +177,18 @@ export default function ExchangeForm({ onSubmit, onCancel, initial }) {
         </div>
       </div>
 
-      {/* UF display */}
+      {/* UF + TFR display */}
       <div className={`rounded-xl p-4 ${uf > 0 ? "bg-emerald-50 border border-emerald-200" : uf < 0 ? "bg-amber-50 border border-amber-200" : "bg-secondary"}`}>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Ultrafiltration (net fluid removed)</span>
           <span className={`text-xl font-bold ${uf > 0 ? "text-emerald-600" : uf < 0 ? "text-amber-600" : "text-foreground"}`}>
             {uf > 0 ? "+" : ""}{uf} mL
+          </span>
+        </div>
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-current/10">
+          <span className="text-sm font-medium text-muted-foreground">Total Fluid Removed (TFR)</span>
+          <span className="text-xl font-bold text-primary">
+            {tfr > 0 ? "+" : ""}{tfr} mL
           </span>
         </div>
       </div>

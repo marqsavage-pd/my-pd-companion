@@ -67,6 +67,7 @@ export default function ActivityTimeline({ exchanges = [], symptoms = [], journa
                 <div className="ml-11 mt-1.5 mb-1 space-y-1 text-xs text-muted-foreground">
                   <p>Appearance: <span className="font-medium capitalize">{item.data.solution_appearance}</span></p>
                   <p>Fill: {item.data.fill_volume} mL · Drain: {item.data.drain_volume} mL</p>
+                  {item.data.tfr != null && <p>TFR: {item.data.tfr} mL</p>}
                   {item.data.dwell_hours != null && <p>Dwell: {item.data.dwell_hours}h</p>}
                   {item.data.notes && <p className="italic">"{item.data.notes}"</p>}
                 </div>

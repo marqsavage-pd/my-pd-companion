@@ -41,11 +41,17 @@ export default function ExchangeCard({ exchange, onEdit, onDelete }) {
             </span>
             {e.solution_appearance === "cloudy" && <AlertTriangle size={13} className="text-destructive" />}
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-2">
+          <div className="grid grid-cols-4 gap-2 mt-2">
             <div>
               <p className="text-[10px] text-muted-foreground uppercase">UF</p>
               <p className={`text-sm font-bold ${e.ultrafiltration >= 0 ? "text-emerald-600" : "text-amber-600"}`}>
                 {e.ultrafiltration > 0 ? "+" : ""}{e.ultrafiltration} mL
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase">TFR</p>
+              <p className={`text-sm font-bold text-primary`}>
+                {e.tfr != null ? `${e.tfr > 0 ? "+" : ""}${e.tfr} mL` : "—"}
               </p>
             </div>
             <div>

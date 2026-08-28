@@ -144,6 +144,7 @@ export default function ClinicReportView({ data }) {
                 <span>{e.dextrose_blend ? `${e.dextrose_blend} (eff ${e.dextrose_concentration}%)` : `${e.dextrose_concentration}%`}</span>
                 <span className="text-muted-foreground">Fill {e.fill_volume || 0} / Drain {e.drain_volume || 0}</span>
                 <span className={e.ultrafiltration > 0 ? "text-emerald-600" : "text-muted-foreground"}>UF {e.ultrafiltration || 0} mL</span>
+                {e.tfr != null && <span className="text-primary font-medium">TFR {e.tfr} mL</span>}
                 <span className={e.solution_appearance === "cloudy" || e.solution_appearance === "bloody" ? "text-destructive font-medium" : "text-muted-foreground"}>{e.solution_appearance || "—"}</span>
               </div>
             ))}

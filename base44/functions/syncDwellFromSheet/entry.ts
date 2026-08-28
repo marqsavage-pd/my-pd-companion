@@ -120,13 +120,17 @@ Deno.serve(async (req) => {
       const needLost = onlyNulls ? ex.lost_dwell == null : true;
       const needDrain = onlyNulls ? ex.drain_volume == null : true;
       const needUF = onlyNulls ? ex.ultrafiltration == null : true;
-      if (!needDwell && !needLost && !needDrain && !needUF) continue;
+      const needTFR = onlyNulls ? ex.tfr == null : true;
+      if (!needDwell && !needLost && !needDrain && !needUF && !needTFR) continue;
 
       const patch = {};
       if (needDwell && sv.dwell_hours != null) patch.dwell_hours = sv.dwell_hours;
       if (needLost && sv.lost_dwell != null) patch.lost_dwell = sv.lost_dwell;
       if (needDrain && sv.drain_volume != null) patch.drain_volume = sv.drain_volume;
       if (needUF && sv.ultrafiltration != null) patch.ultrafiltration = sv.ultrafiltration;
+      if (needTFR && sv.drain_volume != null && sv.ultrafiltration != null) {
+        patch.tfr = sv.drain_volume < 100 ? sv.ultrafiltration : sv.drain_volume - 2000 + sv.ultrafiltration;
+      }
       if (!Object.keys(patch).length) continue;
 
       toUpdate.push({ id: ex.id, ...patch });
@@ -157,6 +161,9 @@ Deno.serve(async (req) => {
         fill_volume,
         drain_volume: sv.drain_volume,
         ultrafiltration: sv.ultrafiltration,
+        tfr: sv.drain_volume != null && sv.ultrafiltration != null
+          ? (sv.drain_volume < 100 ? sv.ultrafiltration : sv.drain_volume - 2000 + sv.ultrafiltration)
+          : null,
         dwell_hours: sv.dwell_hours,
         lost_dwell: sv.lost_dwell,
         solution_appearance: 'clear',
