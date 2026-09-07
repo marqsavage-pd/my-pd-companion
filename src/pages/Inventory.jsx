@@ -110,7 +110,7 @@ export default function Inventory() {
         </div>
       ) : (
         <div className="space-y-2">
-          {supplies.map(item => {
+          {visibleSupplies.map(item => {
             const isLow = item.qty != null && item.reorder_point != null && item.qty <= item.reorder_point;
             return (
               <div key={item.id} className="p-4 rounded-2xl bg-card border group">
