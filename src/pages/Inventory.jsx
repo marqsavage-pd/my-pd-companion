@@ -58,8 +58,10 @@ export default function Inventory() {
     load();
   };
 
+  const [showLowOnly, setShowLowOnly] = useState(false);
   const lowStock = supplies.filter(s => s.qty != null && s.reorder_point != null && s.qty <= s.reorder_point);
   const totalItems = supplies.length;
+  const visibleSupplies = showLowOnly ? lowStock : supplies;
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-secondary border-t-primary rounded-full animate-spin" /></div>;
@@ -77,15 +79,25 @@ export default function Inventory() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-5">
-          <p className="text-xs font-semibold text-primary uppercase tracking-wider">Tracked Items</p>
-          <p className="text-3xl font-bold text-primary mt-1">{totalItems}</p>
-        </div>
-        <div className={`border rounded-2xl p-5 ${lowStock.length > 0 ? "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200" : "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200"}`}>
-          <p className={`text-xs font-semibold uppercase tracking-wider ${lowStock.length > 0 ? "text-amber-700" : "text-emerald-700"}`}>Need Reorder</p>
-          <p className={`text-3xl font-bold mt-1 ${lowStock.length > 0 ? "text-amber-700" : "text-emerald-700"}`}>{lowStock.length}</p>
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/20 text-sm">
+          <span className="text-xs font-medium text-primary/70">Tracked</span>
+          <span className="text-sm font-bold text-primary">{totalItems}</span>
+        </span>
+        <button
+          onClick={() => setShowLowOnly(v => !v)}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+            showLowOnly
+              ? "bg-amber-100 border border-amber-300"
+              : "bg-amber-50 border border-amber-200 hover:border-amber-300"
+          }`}
+        >
+          <span className="text-xs font-medium text-amber-700/80">Need Reorder</span>
+          <span className="text-sm font-bold text-amber-700">{lowStock.length}</span>
+        </button>
+        {showLowOnly && (
+          <button onClick={() => setShowLowOnly(false)} className="text-xs text-muted-foreground underline ml-1">show all</button>
+        )}
       </div>
 
       {supplies.length === 0 ? (
